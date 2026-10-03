@@ -1,6 +1,9 @@
 <?php
 
+use App\Filament\AvatarProviders\InitialsAvatarProvider;
+use App\Models\Admin;
 use App\Models\User;
+use Filament\Facades\Filament;
 
 it('sends security headers with a nonce based policy on the public site', function () {
     $response = $this->get('/');
@@ -31,4 +34,22 @@ it('sends HSTS over HTTPS', function () {
 
 it('marks auth and panel pages as noindex', function () {
     $this->get('/giris')->assertSee('noindex, nofollow', false);
+});
+
+it('gives every script on the admin login page the request nonce', function () {
+    $response = $this->get('/'.trim(config('hova.admin.path'), '/').'/login')->assertOk();
+
+    preg_match("/'nonce-([^']+)'/", (string) $response->headers->get('Content-Security-Policy'), $match);
+    preg_match_all('/<script\b[^>]*>/i', $response->getContent(), $scripts);
+
+    expect($match[1] ?? null)->not->toBeNull()
+        ->and($scripts[0])->not->toBeEmpty()
+        ->each->toContain('nonce="'.$match[1].'"');
+});
+
+it('does not load avatars from a third party', function () {
+    $admin = Admin::factory()->create(['name' => 'Deniz Yılmaz']);
+
+    expect(Filament::getPanel('admin')->getDefaultAvatarProvider())->toBe(InitialsAvatarProvider::class)
+        ->and(app(InitialsAvatarProvider::class)->get($admin))->toStartWith('data:image/svg+xml;base64,');
 });

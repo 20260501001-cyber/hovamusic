@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Models\Concerns\Auditable;
 use App\Enums\AdminRole;
+use App\Models\Concerns\Auditable;
 use Database\Factories\AdminFactory;
 use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication;
 use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthenticationRecovery;

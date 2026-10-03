@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\AvatarProviders\InitialsAvatarProvider;
 use App\Http\Middleware\RestrictAdminIp;
 use App\Http\Middleware\SecurityHeaders;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
@@ -13,7 +14,6 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -36,9 +36,26 @@ class AdminPanelProvider extends PanelProvider
                 AppAuthentication::make()->recoverable(),
             ], isRequired: true)
             ->brandName('Hova Music')
+            // Tasarım sistemindeki accent tonları (600 = accent). Color::hex() paleti
+            // açık türettiği için Filament butonlarda soluk mor + koyu yazı seçiyordu.
+            // 500, açık yazıyla kalacak kadar koyu tutuldu; Filament butonun hover
+            // tonu olarak onu kullanır.
             ->colors([
-                'primary' => Color::hex('#4C3BFF'),
+                'primary' => [
+                    50 => '#F4F3FF',
+                    100 => '#ECEBFF',
+                    200 => '#D9D6FF',
+                    300 => '#C9C5FF',
+                    400 => '#A29BFF',
+                    500 => '#6354FF',
+                    600 => '#4C3BFF',
+                    700 => '#3E2EF2',
+                    800 => '#2F22B8',
+                    900 => '#231A85',
+                    950 => '#1D1A4A',
+                ],
             ])
+            ->defaultAvatarProvider(InitialsAvatarProvider::class)
             ->font('Archivo', provider: LocalFontProvider::class)
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->darkMode(true)

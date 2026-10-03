@@ -22,7 +22,7 @@ class AdminResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Sistem';
 
-    protected static ?string $modelLabel = 'admin';
+    protected static ?string $modelLabel = 'Admin';
 
     protected static ?string $pluralModelLabel = 'Adminler';
 

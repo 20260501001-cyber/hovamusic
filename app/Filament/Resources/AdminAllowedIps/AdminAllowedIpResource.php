@@ -24,7 +24,7 @@ class AdminAllowedIpResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Sistem';
 
-    protected static ?string $modelLabel = 'izinli IP';
+    protected static ?string $modelLabel = 'İzinli IP';
 
     protected static ?string $pluralModelLabel = 'Admin IP kısıtlaması';
 

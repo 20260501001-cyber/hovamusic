@@ -28,28 +28,43 @@ return [
         'verification' => '6,1',
     ],
 
+    /*
+     * Fortify yolları config('fortify.paths.<rota adı>') ile okur. Rota adındaki
+     * noktalar iç içe anahtar sayıldığı için "password.email" gibi adlar iç içe
+     * dizi olarak yazılır.
+     */
     'paths' => [
         'login' => 'giris',
         'logout' => 'cikis',
-        'password.request' => 'sifremi-unuttum',
-        'password.email' => 'sifremi-unuttum',
-        'password.reset' => 'sifre-yenile/{token}',
-        'password.update' => 'sifre-yenile',
         'register' => 'kayit',
-        'verification.notice' => 'e-posta-dogrulama',
-        'verification.verify' => 'e-posta-dogrulama/{id}/{hash}',
-        'verification.send' => 'e-posta-dogrulama/yeniden-gonder',
-        'user-profile-information.update' => 'panel/hesap/profil',
-        'user-password.update' => 'panel/hesap/sifre',
-        'password.confirm' => 'sifre-onayla',
-        'password.confirmation' => 'sifre-onayla/durum',
-        'two-factor.login' => 'iki-adimli-dogrulama',
-        'two-factor.enable' => 'panel/hesap/iki-adimli-dogrulama',
-        'two-factor.confirm' => 'panel/hesap/iki-adimli-dogrulama/onayla',
-        'two-factor.disable' => 'panel/hesap/iki-adimli-dogrulama',
-        'two-factor.qr-code' => 'panel/hesap/iki-adimli-dogrulama/qr-kod',
-        'two-factor.secret-key' => 'panel/hesap/iki-adimli-dogrulama/anahtar',
-        'two-factor.recovery-codes' => 'panel/hesap/iki-adimli-dogrulama/kurtarma-kodlari',
+        'password' => [
+            'request' => 'sifremi-unuttum',
+            'email' => 'sifremi-unuttum',
+            'reset' => 'sifre-yenile/{token}',
+            'update' => 'sifre-yenile',
+            'confirm' => 'sifre-onayla',
+            'confirmation' => 'sifre-onayla/durum',
+        ],
+        'verification' => [
+            'notice' => 'e-posta-dogrulama',
+            'verify' => 'e-posta-dogrulama/{id}/{hash}',
+            'send' => 'e-posta-dogrulama/yeniden-gonder',
+        ],
+        'user-profile-information' => [
+            'update' => 'panel/hesap/profil',
+        ],
+        'user-password' => [
+            'update' => 'panel/hesap/sifre',
+        ],
+        'two-factor' => [
+            'login' => 'iki-adimli-dogrulama',
+            'enable' => 'panel/hesap/iki-adimli-dogrulama',
+            'confirm' => 'panel/hesap/iki-adimli-dogrulama/onayla',
+            'disable' => 'panel/hesap/iki-adimli-dogrulama',
+            'qr-code' => 'panel/hesap/iki-adimli-dogrulama/qr-kod',
+            'secret-key' => 'panel/hesap/iki-adimli-dogrulama/anahtar',
+            'recovery-codes' => 'panel/hesap/iki-adimli-dogrulama/kurtarma-kodlari',
+        ],
     ],
 
     'redirects' => [

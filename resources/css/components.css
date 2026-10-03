@@ -272,7 +272,7 @@
 .hm-divider { border: 0; border-top: 1px solid var(--line); margin: 0; }
 
 /* Layout: panel */
-.hm-panel { min-height: 100dvh; display: grid; grid-template-columns: 1fr; }
+.hm-panel { min-height: 100dvh; display: grid; grid-template-columns: 1fr; align-content: start; }
 .hm-panel__sidebar { display: none; }
 .hm-panel__topbar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); height: 56px; padding-inline: var(--space-4); border-bottom: 1px solid var(--line); background: var(--surface); position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; }
 .hm-panel__main { min-width: 0; padding: var(--space-5) var(--space-4) var(--space-8); display: grid; gap: var(--space-6); align-content: start; }

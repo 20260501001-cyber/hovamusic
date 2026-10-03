@@ -2,12 +2,13 @@
 
 namespace App\Providers;
 
-use Carbon\CarbonImmutable;
 use App\Models\Admin;
 use App\Support\Audit\AuditLogger;
+use Carbon\CarbonImmutable;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
@@ -25,6 +26,16 @@ class AppServiceProvider extends ServiceProvider
         Model::shouldBeStrict(! $this->app->isProduction());
 
         Date::use(CarbonImmutable::class);
+
+        // CSP satır içi script'e yalnızca nonce ile izin veriyor. Filament'in
+        // düzen şablonlarındaki satır içi script'ler (tema, menü durumu) nonce
+        // taşımadığı için engelleniyordu; nonce'u olmayan her <script> etiketine
+        // derleme sırasında isteğin nonce'u eklenir.
+        Blade::precompiler(static fn (string $template): string => preg_replace(
+            '/<script(?=[\s>])(?![^>]*\bnonce=)/i',
+            '<script nonce="{{ Vite::cspNonce() }}"',
+            $template,
+        ));
 
         Password::defaults(function () {
             $rule = Password::min(10)->letters()->numbers()->max(128);

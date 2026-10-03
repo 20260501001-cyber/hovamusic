@@ -23,7 +23,7 @@ class AuditLogResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Sistem';
 
-    protected static ?string $modelLabel = 'işlem kaydı';
+    protected static ?string $modelLabel = 'İşlem kaydı';
 
     protected static ?string $pluralModelLabel = 'Audit log';
 
