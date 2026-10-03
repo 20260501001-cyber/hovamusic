@@ -1,0 +1,52 @@
+<?php
+
+return [
+    'nav' => [
+        'label' => 'Panel menüsü',
+        'dashboard' => 'Genel bakış',
+        'account' => 'Hesap ayarları',
+        'logout' => 'Çıkış yap',
+        'open' => 'Menüyü aç',
+        'close' => 'Menüyü kapat',
+    ],
+    'dashboard' => [
+        'greeting' => 'Merhaba, :name',
+        'empty_title' => 'Henüz yayının yok',
+        'empty_body' => 'Yayınların ve durumları burada listelenecek.',
+    ],
+    'account' => [
+        'profile' => 'Profil',
+        'profile_hint' => 'Fatura ve ödeme bilgileri ayrı bir bölümde tutulur.',
+        'email_change_hint' => 'E-posta adresini değiştirirsen yeni adresi doğrulaman gerekir.',
+        'password' => 'Şifre',
+        'password_submit' => 'Şifreyi güncelle',
+        'two_factor' => 'İki adımlı doğrulama',
+        'two_factor_hint' => 'Girişte şifrene ek olarak doğrulama uygulamasındaki kod istenir.',
+        'two_factor_on' => 'İki adımlı doğrulama açık.',
+        'two_factor_enable' => 'İki adımlı doğrulamayı aç',
+        'two_factor_disable' => 'Kapat',
+        'two_factor_confirm' => 'Kodu doğrula',
+        'two_factor_step_scan' => 'Doğrulama uygulamasıyla (Google Authenticator, 1Password vb.) QR kodu tara ya da kurulum anahtarını gir.',
+        'two_factor_step_code' => 'Uygulamanın ürettiği 6 haneli kodu aşağıya yaz.',
+        'two_factor_setup_key' => 'Kurulum anahtarı',
+        'recovery_codes_hint' => 'Kurtarma kodlarını güvenli bir yere kaydet. Telefonuna erişemezsen her kod bir kez giriş için kullanılabilir.',
+        'recovery_codes_regenerate' => 'Kurtarma kodlarını yenile',
+        'preferences' => 'Tercihler',
+        'theme' => 'Tema',
+        'themes' => [
+            'system' => 'Sistem ayarı',
+            'light' => 'Açık',
+            'dark' => 'Koyu',
+        ],
+        'currency' => 'Tutarları gösterme para birimi',
+        'currency_hint' => 'USD dışındaki tutarlar admin\'in girdiği kurla yaklaşık gösterilir.',
+    ],
+    'flash' => [
+        'profile_updated' => 'Profil bilgilerin kaydedildi.',
+        'password_updated' => 'Şifren güncellendi.',
+        'preferences_updated' => 'Tercihlerin kaydedildi.',
+        'two_factor_disabled' => 'İki adımlı doğrulama kapatıldı.',
+        'two_factor_confirmed' => 'İki adımlı doğrulama açıldı.',
+        'recovery_codes_generated' => 'Yeni kurtarma kodları oluşturuldu.',
+    ],
+];

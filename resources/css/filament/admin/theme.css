@@ -1,0 +1,9 @@
+@import '@fontsource-variable/archivo/wdth.css';
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+
+@theme {
+    --font-sans: "Archivo Variable", "Helvetica Neue", Arial, sans-serif;
+}

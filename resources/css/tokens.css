@@ -1,0 +1,116 @@
+/*
+ * Hova Music tasarım tokenları. Kaynak: Hova Music Tasarım Sistemi.
+ * Koyu tema varsayılandır. data-theme="light" açık temayı zorlar; data-theme
+ * yoksa işletim sistemi tercihi uygulanır. Herkese açık site data-theme="dark" ile çalışır.
+ */
+
+:root {
+    color-scheme: dark;
+    --ground: #0A0A0C;
+    --surface: #131316;
+    --surface-hover: #1B1B20;
+    --line: #26262C;
+    --line-strong: #686872;
+    --ink: #F2F1EF;
+    --ink-muted: #A09FA8;
+    --ink-subtle: #85848E;
+    --accent: #4C3BFF;
+    --accent-hover: #3E2EF2;
+    --accent-ink: #A29BFF;
+    --accent-soft: #1D1A4A;
+    --accent-tint: #9C94FF;
+    --on-accent: #FFFFFF;
+    --focus-ring: #A29BFF;
+    --success: #3DD68C;
+    --success-soft: #0F2A1E;
+    --warning: #F5B83D;
+    --warning-soft: #2D2410;
+    --danger: #FF6B6F;
+    --danger-soft: #301415;
+    --info: #5CC8FF;
+    --info-soft: #0E2533;
+    --shadow-overlay: 0 12px 32px rgba(0,0,0,0.6);
+
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --space-7: 48px;
+    --space-8: 64px;
+    --space-9: 96px;
+    --space-10: 128px;
+
+    --radius-xs: 2px;
+    --radius-s: 4px;
+    --radius-m: 6px;
+    --radius-l: 10px;
+    --radius-pill: 999px;
+
+    --control-m: 44px;
+    --control-s: 32px;
+    --content-max: 1200px;
+    --text-max: 68ch;
+
+    --font-sans: "Archivo Variable", "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "Martian Mono Variable", ui-monospace, Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+        color-scheme: light;
+        --ground: #F6F6F7;
+        --surface: #FFFFFF;
+        --surface-hover: #EFEFF2;
+        --line: #E3E3E8;
+        --line-strong: #83828C;
+        --ink: #0B0B0E;
+        --ink-muted: #55545D;
+        --ink-subtle: #6B6A73;
+        --accent: #4C3BFF;
+        --accent-hover: #3B2BE6;
+        --accent-ink: #4433F0;
+        --accent-soft: #ECEBFF;
+        --accent-tint: #C9C5FF;
+        --on-accent: #FFFFFF;
+        --focus-ring: #4C3BFF;
+        --success: #1B7A4A;
+        --success-soft: #E2F3E9;
+        --warning: #9A5806;
+        --warning-soft: #FBEFD9;
+        --danger: #C42A2F;
+        --danger-soft: #FBE5E5;
+        --info: #0B6BA8;
+        --info-soft: #E0EFF9;
+        --shadow-overlay: 0 12px 32px rgba(11,11,14,0.14);
+    }
+}
+
+:root[data-theme="light"] {
+    color-scheme: light;
+    --ground: #F6F6F7;
+    --surface: #FFFFFF;
+    --surface-hover: #EFEFF2;
+    --line: #E3E3E8;
+    --line-strong: #83828C;
+    --ink: #0B0B0E;
+    --ink-muted: #55545D;
+    --ink-subtle: #6B6A73;
+    --accent: #4C3BFF;
+    --accent-hover: #3B2BE6;
+    --accent-ink: #4433F0;
+    --accent-soft: #ECEBFF;
+    --accent-tint: #C9C5FF;
+    --on-accent: #FFFFFF;
+    --focus-ring: #4C3BFF;
+    --success: #1B7A4A;
+    --success-soft: #E2F3E9;
+    --warning: #9A5806;
+    --warning-soft: #FBEFD9;
+    --danger: #C42A2F;
+    --danger-soft: #FBE5E5;
+    --info: #0B6BA8;
+    --info-soft: #E0EFF9;
+    --shadow-overlay: 0 12px 32px rgba(11,11,14,0.14);
+}
