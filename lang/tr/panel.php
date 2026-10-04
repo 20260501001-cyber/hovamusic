@@ -4,6 +4,8 @@ return [
     'nav' => [
         'label' => 'Panel menüsü',
         'dashboard' => 'Genel bakış',
+        'releases' => 'Yayınlarım',
+        'artists' => 'Sanatçılar',
         'account' => 'Hesap ayarları',
         'logout' => 'Çıkış yap',
         'open' => 'Menüyü aç',
@@ -13,6 +15,8 @@ return [
         'greeting' => 'Merhaba, :name',
         'empty_title' => 'Henüz yayının yok',
         'empty_body' => 'Yayınların ve durumları burada listelenecek.',
+        'recent' => 'Son yayınların',
+        'all_releases' => 'Tüm yayınlar',
     ],
     'account' => [
         'profile' => 'Profil',

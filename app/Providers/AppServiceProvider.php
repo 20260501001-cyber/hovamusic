@@ -2,15 +2,25 @@
 
 namespace App\Providers;
 
+use App\Domain\Media\AudioProbe;
+use App\Domain\Media\FfprobeAudioProbe;
+use App\Domain\Spotify\FakeSpotifyCatalog;
+use App\Domain\Spotify\SpotifyCatalog;
+use App\Domain\Spotify\SpotifyWebApiCatalog;
+use App\Domain\Spotify\UnavailableSpotifyCatalog;
 use App\Models\Admin;
 use App\Support\Audit\AuditLogger;
+use App\Support\Settings;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -18,7 +28,22 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->singleton(Settings::class);
+
+        $this->app->singleton(SpotifyCatalog::class, function (): SpotifyCatalog {
+            if ($this->app->runningUnitTests()) {
+                return new FakeSpotifyCatalog;
+            }
+
+            $id = (string) config('services.spotify.client_id');
+            $secret = (string) config('services.spotify.client_secret');
+
+            return $id !== '' && $secret !== ''
+                ? new SpotifyWebApiCatalog($id, $secret)
+                : new UnavailableSpotifyCatalog;
+        });
+
+        $this->app->bind(AudioProbe::class, fn (): AudioProbe => new FfprobeAudioProbe((string) config('hova.media.ffprobe')));
     }
 
     public function boot(): void
@@ -36,6 +61,9 @@ class AppServiceProvider extends ServiceProvider
             '<script nonce="{{ Vite::cspNonce() }}"',
             $template,
         ));
+
+        // Ses yüklemesi 4 MB'lık parçalarla yapılır; 1 GB'lık dosya yaklaşık 256 istek.
+        RateLimiter::for('uploads', fn (Request $request): Limit => Limit::perMinute(600)->by((string) ($request->user()?->id ?: $request->ip())));
 
         Password::defaults(function () {
             $rule = Password::min(10)->letters()->numbers()->max(128);

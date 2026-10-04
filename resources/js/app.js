@@ -1,3 +1,5 @@
+import './uploads';
+
 document.addEventListener('click', (event) => {
     const opener = event.target.closest('[data-drawer-open]');
     const closer = event.target.closest('[data-drawer-close]');
@@ -20,6 +22,14 @@ document.addEventListener('keydown', (event) => {
 });
 
 document.addEventListener('submit', (event) => {
+    const message = event.target.dataset.confirm;
+
+    if (message && !window.confirm(message)) {
+        event.preventDefault();
+
+        return;
+    }
+
     const button = event.target.querySelector('button[type="submit"][data-loading-text]');
 
     if (button && !button.disabled) {

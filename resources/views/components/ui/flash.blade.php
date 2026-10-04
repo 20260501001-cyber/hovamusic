@@ -8,7 +8,7 @@
         'recovery-codes-generated' => __('panel.flash.recovery_codes_generated'),
         'verification-link-sent' => __('auth.verify.link_sent'),
     ];
-    $message = $messages[session('status')] ?? null;
+    $message = $messages[session('status')] ?? session('flash');
 @endphp
 
 @if ($message)

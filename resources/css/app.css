@@ -66,6 +66,10 @@
         outline-offset: 2px;
     }
 
+    [x-cloak] {
+        display: none !important;
+    }
+
     ::selection {
         background: var(--accent);
         color: var(--on-accent);

@@ -49,8 +49,12 @@ class SecurityHeaders
         $style = ["'self'", "'unsafe-inline'"];
         $connect = ["'self'"];
 
+        $image = ["'self'", 'data:', 'blob:'];
+
         if ($this->isApplicationArea($request)) {
             $script[] = "'unsafe-eval'";
+            // Spotify sanatçı aramasındaki profil görselleri.
+            $image[] = 'https://i.scdn.co';
         }
 
         if (Vite::isRunningHot()) {
@@ -65,7 +69,7 @@ class SecurityHeaders
             'default-src' => ["'self'"],
             'script-src' => $script,
             'style-src' => $style,
-            'img-src' => ["'self'", 'data:', 'blob:'],
+            'img-src' => $image,
             'font-src' => ["'self'", 'data:'],
             'connect-src' => $connect,
             'media-src' => ["'self'", 'blob:'],

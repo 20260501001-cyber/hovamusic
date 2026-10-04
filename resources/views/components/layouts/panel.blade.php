@@ -7,6 +7,8 @@
     $theme = $user?->theme?->value ?? 'system';
     $items = [
         ['route' => 'panel.dashboard', 'icon' => 'layout-dashboard', 'label' => __('panel.nav.dashboard')],
+        ['route' => 'panel.releases.index', 'active' => 'panel.releases.*', 'icon' => 'disc-3', 'label' => __('panel.nav.releases')],
+        ['route' => 'panel.artists', 'icon' => 'mic-vocal', 'label' => __('panel.nav.artists')],
         ['route' => 'panel.account', 'icon' => 'user-cog', 'label' => __('panel.nav.account')],
     ];
 @endphp

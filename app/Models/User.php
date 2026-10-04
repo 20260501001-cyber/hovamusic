@@ -70,6 +70,30 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Consent::class);
     }
 
+    /**
+     * @return HasMany<Artist, $this>
+     */
+    public function artists(): HasMany
+    {
+        return $this->hasMany(Artist::class)->orderBy('name');
+    }
+
+    /**
+     * @return HasMany<Release, $this>
+     */
+    public function releases(): HasMany
+    {
+        return $this->hasMany(Release::class);
+    }
+
+    /**
+     * @return HasMany<MediaFile, $this>
+     */
+    public function mediaFiles(): HasMany
+    {
+        return $this->hasMany(MediaFile::class);
+    }
+
     public function isLabel(): bool
     {
         return $this->account_type === AccountType::Label;
