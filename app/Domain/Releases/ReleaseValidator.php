@@ -2,8 +2,10 @@
 
 namespace App\Domain\Releases;
 
+use App\Domain\Isrc\IsrcAllocator;
 use App\Enums\ArtistRole;
 use App\Enums\CreditRole;
+use App\Enums\IsrcSource;
 use App\Enums\MediaStatus;
 use App\Enums\ReleaseType;
 use App\Enums\TerritoryMode;
@@ -51,7 +53,10 @@ class ReleaseValidator
 
     public const PREVIEW_LENGTH_SEC = 30;
 
-    public function __construct(private readonly Settings $settings) {}
+    public function __construct(
+        private readonly Settings $settings,
+        private readonly IsrcAllocator $isrc,
+    ) {}
 
     /**
      * Gönderim kontrolü.
@@ -243,8 +248,12 @@ class ReleaseValidator
             $errors['language'] = __('release.validation.track_language_required');
         }
 
-        if (filled($track->isrc) && Isrc::normalize($track->isrc) === null) {
+        if ($track->has_own_isrc && blank($track->isrc)) {
+            $errors['isrc'] = __('release.validation.isrc_own_missing');
+        } elseif (filled($track->isrc) && Isrc::normalize($track->isrc) === null) {
             $errors['isrc'] = __('release.validation.isrc_format');
+        } elseif ($track->isrc_source === IsrcSource::User && $this->isrc->isReserved($track->isrc)) {
+            $errors['isrc'] = __('isrc.reserved', ['prefix' => $this->isrc->registrant()]);
         }
 
         if ($track->creditNames(CreditRole::Composer) === []) {

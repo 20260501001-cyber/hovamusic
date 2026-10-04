@@ -2,11 +2,13 @@
 
 namespace App\Livewire\Releases\Wizard;
 
+use App\Domain\Isrc\IsrcAllocator;
 use App\Domain\Media\ChunkedUploads;
 use App\Domain\Releases\ArtistCredits;
 use App\Domain\Releases\ReleaseValidator;
 use App\Enums\ArtistRole;
 use App\Enums\CreditRole;
+use App\Enums\IsrcSource;
 use App\Enums\MediaStatus;
 use App\Enums\UploadStatus;
 use App\Models\Release;
@@ -73,6 +75,7 @@ class TracksStep extends WizardStep
             'title' => (string) $track->title,
             'version' => (string) $track->version,
             'isrc' => (string) $track->formattedIsrc(),
+            'has_own_isrc' => $track->has_own_isrc || (filled($track->isrc) && $track->isrc_source !== IsrcSource::Hova) ? '1' : '0',
             'explicit' => $track->explicit,
             'language' => (string) $track->language,
             'preview_start_sec' => (string) $track->preview_start_sec,
@@ -105,6 +108,7 @@ class TracksStep extends WizardStep
             'title' => $track->title = $this->clean($this->form['title'] ?? '', 200),
             'version' => $track->version = $this->clean($this->form['version'] ?? '', 120),
             'isrc' => $this->saveIsrc($track),
+            'has_own_isrc' => $this->saveIsrcChoice($track),
             'explicit' => $track->explicit = (bool) ($this->form['explicit'] ?? false),
             'language' => $track->language = in_array($this->form['language'] ?? null, Languages::codes(), true) ? $this->form['language'] : null,
             'preview_start_sec' => $track->preview_start_sec = min(65535, max(0, (int) ($this->form['preview_start_sec'] ?? 0))),
@@ -279,18 +283,44 @@ class TracksStep extends WizardStep
         ]);
     }
 
+    /**
+     * "ISRC kodum var / yok" seçimi. Hova Music'in atadığı kod değiştirilemez.
+     */
+    private function saveIsrcChoice(Track $track): void
+    {
+        if ($track->isrc_source === IsrcSource::Hova) {
+            return;
+        }
+
+        $own = (bool) (int) ($this->form['has_own_isrc'] ?? 0);
+        $track->has_own_isrc = $own;
+        $this->clearInputError('form.isrc');
+
+        if (! $own) {
+            $track->isrc = null;
+            $track->isrc_source = null;
+            $this->form['isrc'] = '';
+        }
+    }
+
     private function saveIsrc(Track $track): void
     {
+        if ($track->isrc_source === IsrcSource::Hova) {
+            return;
+        }
+
         $raw = trim((string) ($this->form['isrc'] ?? ''));
         $this->clearInputError('form.isrc');
 
         if ($raw === '') {
             $track->isrc = null;
+            $track->isrc_source = null;
 
             return;
         }
 
         $isrc = Isrc::normalize($raw);
+        $allocator = app(IsrcAllocator::class);
 
         if ($isrc === null) {
             $this->inputErrors['form.isrc'] = __('release.validation.isrc_format');
@@ -298,8 +328,15 @@ class TracksStep extends WizardStep
             return;
         }
 
-        $track->isrc = $isrc;
+        if ($allocator->isReserved($isrc)) {
+            $this->inputErrors['form.isrc'] = __('isrc.reserved', ['prefix' => $allocator->registrant()]);
+
+            return;
+        }
+
+        $track->forceFill(['isrc' => $isrc, 'isrc_source' => IsrcSource::User, 'has_own_isrc' => true]);
         $this->form['isrc'] = $track->formattedIsrc();
+        $this->form['has_own_isrc'] = '1';
     }
 
     private function saveFeaturing(Track $track): void

@@ -6,6 +6,7 @@ use App\Enums\ArtistRole;
 use App\Enums\ReleaseStatus;
 use App\Enums\ReleaseType;
 use App\Enums\TerritoryMode;
+use App\Models\Concerns\Auditable;
 use App\Models\Concerns\HasPublicUlid;
 use Database\Factories\ReleaseFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -18,12 +19,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
     'type', 'title', 'version', 'label_name', 'genre_id', 'subgenre_id', 'language', 'release_date', 'original_release_date',
-    'p_line', 'c_line', 'upc', 'explicit', 'territory_mode', 'territories', 'cover_media_id', 'wizard_step',
+    'p_line', 'c_line', 'upc', 'spotify_album_id', 'explicit', 'territory_mode', 'territories', 'cover_media_id', 'wizard_step',
 ])]
 class Release extends Model
 {
     /** @use HasFactory<ReleaseFactory> */
-    use HasFactory, HasPublicUlid, SoftDeletes;
+    use Auditable, HasFactory, HasPublicUlid, SoftDeletes;
 
     protected $attributes = [
         'status' => 'draft',
@@ -44,6 +45,7 @@ class Release extends Model
             'original_release_date' => 'date',
             'submitted_at' => 'datetime',
             'locked_at' => 'datetime',
+            'spotify_checked_at' => 'datetime',
             'wizard_step' => 'integer',
         ];
     }
@@ -112,6 +114,30 @@ class Release extends Model
     public function statusLogs(): HasMany
     {
         return $this->hasMany(ReleaseStatusLog::class)->orderByDesc('created_at')->orderByDesc('id');
+    }
+
+    /**
+     * @return HasMany<ReleaseStoreLink, $this>
+     */
+    public function storeLinks(): HasMany
+    {
+        return $this->hasMany(ReleaseStoreLink::class);
+    }
+
+    /**
+     * @return HasMany<ReleaseRequest, $this>
+     */
+    public function requests(): HasMany
+    {
+        return $this->hasMany(ReleaseRequest::class)->latest('id');
+    }
+
+    /**
+     * @return HasMany<SpotifyMatch, $this>
+     */
+    public function spotifyMatches(): HasMany
+    {
+        return $this->hasMany(SpotifyMatch::class)->latest('id');
     }
 
     public function isEditable(): bool

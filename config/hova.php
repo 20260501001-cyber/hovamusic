@@ -33,6 +33,8 @@ return [
         'release_min_lead_days' => 2,
         'cover_max_mb' => 20,
         'audio_max_mb' => 1024,
+        // PPL'nin verdiği ilk beş karakter: ülke kodu + kayıt sahibi kodu.
+        'isrc_registrant' => 'GXLM5',
     ],
 
     'plans' => [

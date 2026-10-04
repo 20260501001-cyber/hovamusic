@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Enums\ArtistRole;
 use App\Enums\CreditRole;
+use App\Enums\IsrcSource;
+use App\Models\Concerns\Auditable;
 use App\Models\Concerns\HasPublicUlid;
 use Database\Factories\TrackFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -12,14 +14,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['position', 'title', 'version', 'isrc', 'explicit', 'language', 'preview_start_sec', 'lyrics', 'audio_file_id', 'duration_ms'])]
+#[Fillable(['position', 'title', 'version', 'isrc', 'has_own_isrc', 'isrc_source', 'explicit', 'language', 'preview_start_sec', 'lyrics', 'audio_file_id', 'duration_ms', 'spotify_track_id'])]
 class Track extends Model
 {
     /** @use HasFactory<TrackFactory> */
-    use HasFactory, HasPublicUlid;
+    use Auditable, HasFactory, HasPublicUlid;
 
     protected $attributes = [
         'explicit' => false,
+        'has_own_isrc' => false,
         'preview_start_sec' => 0,
     ];
 
@@ -28,6 +31,8 @@ class Track extends Model
         return [
             'position' => 'integer',
             'explicit' => 'boolean',
+            'has_own_isrc' => 'boolean',
+            'isrc_source' => IsrcSource::class,
             'preview_start_sec' => 'integer',
             'duration_ms' => 'integer',
         ];

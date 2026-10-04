@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Domain\Users\Impersonation;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
@@ -14,7 +15,8 @@ class EnsureAccountIsActive
     {
         $user = $request->user();
 
-        if ($user instanceof User && ! $user->canSignIn()) {
+        // Admin askıdaki ya da banlı hesabı da görüntüleyebilir; görüntüleme salt okunurdur.
+        if ($user instanceof User && ! $user->canSignIn() && ! app(Impersonation::class)->active($request)) {
             Auth::guard('web')->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

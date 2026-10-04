@@ -51,4 +51,14 @@ class Settings
     {
         return $this->int('audio_max_mb') * 1024 * 1024;
     }
+
+    /**
+     * ISRC'nin ilk beş karakteri: ülke kodu ve kayıt sahibi kodu (ör. GXLM5).
+     */
+    public function isrcRegistrant(): ?string
+    {
+        $value = strtoupper(trim((string) $this->get('isrc_registrant')));
+
+        return preg_match('/^[A-Z]{2}[A-Z0-9]{3}$/', $value) ? $value : null;
+    }
 }

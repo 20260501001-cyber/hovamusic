@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\BlockWhileImpersonating;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\GuardAuthForms;
 use App\Http\Middleware\RestrictAdminIp;
@@ -16,7 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->web(append: [SecurityHeaders::class, EnsureAccountIsActive::class]);
+        $middleware->web(append: [SecurityHeaders::class, EnsureAccountIsActive::class, BlockWhileImpersonating::class]);
 
         $middleware->alias([
             'auth.forms' => GuardAuthForms::class,

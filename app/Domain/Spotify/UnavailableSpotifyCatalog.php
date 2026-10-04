@@ -26,4 +26,14 @@ class UnavailableSpotifyCatalog implements SpotifyCatalog
     {
         throw new SpotifyUnavailable('Spotify bağlantısı yapılandırılmadı.');
     }
+
+    public function findAlbumByUpc(string $upc): ?SpotifyAlbum
+    {
+        throw new SpotifyUnavailable('Spotify bağlantısı yapılandırılmadı.');
+    }
+
+    public function findTrackByIsrc(string $isrc): ?SpotifyTrack
+    {
+        throw new SpotifyUnavailable('Spotify bağlantısı yapılandırılmadı.');
+    }
 }

@@ -12,6 +12,18 @@ class FakeSpotifyCatalog implements SpotifyCatalog
      */
     private array $artists = [];
 
+    /**
+     * @var array<string, SpotifyAlbum>
+     */
+    private array $albums = [];
+
+    /**
+     * @var array<string, SpotifyTrack>
+     */
+    private array $tracks = [];
+
+    public int $lookups = 0;
+
     public function __construct()
     {
         $this->add(new SpotifyArtist('4tZwfgrHOc3mvqYlEYSvVi', 'Deniz Yılmaz', 'https://open.spotify.com/artist/4tZwfgrHOc3mvqYlEYSvVi', 'https://i.scdn.co/image/deniz'));
@@ -48,5 +60,33 @@ class FakeSpotifyCatalog implements SpotifyCatalog
     public function findArtist(string $id): ?SpotifyArtist
     {
         return $this->artists[$id] ?? null;
+    }
+
+    public function addAlbum(string $upc, SpotifyAlbum $album): static
+    {
+        $this->albums[$upc] = $album;
+
+        return $this;
+    }
+
+    public function addTrack(SpotifyTrack $track): static
+    {
+        $this->tracks[$track->isrc] = $track;
+
+        return $this;
+    }
+
+    public function findAlbumByUpc(string $upc): ?SpotifyAlbum
+    {
+        $this->lookups++;
+
+        return $this->albums[$upc] ?? null;
+    }
+
+    public function findTrackByIsrc(string $isrc): ?SpotifyTrack
+    {
+        $this->lookups++;
+
+        return $this->tracks[strtoupper($isrc)] ?? null;
     }
 }

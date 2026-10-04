@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,6 +14,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['artist_id', 'name', 'role', 'spotify_artist_id', 'apple_music_id', 'position'])]
 class ReleaseArtist extends Model
 {
+    use Auditable;
+
     public $timestamps = false;
 
     protected function casts(): array

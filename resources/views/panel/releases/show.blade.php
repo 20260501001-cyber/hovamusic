@@ -33,6 +33,26 @@
         <x-ui.alert tone="info" :title="__('release.show.locked')" />
     @endcannot
 
+    @if ($storeLinks->isNotEmpty())
+        <section class="hm-card" aria-labelledby="magaza-baslik">
+            <div class="hm-card__head">
+                <h2 id="magaza-baslik" class="hm-h3">{{ __('release.show.store_links') }}</h2>
+                <p class="hm-muted m-0 text-sm">{{ __('release.show.store_links_help') }}</p>
+            </div>
+            <div class="hm-card__body">
+                <ul class="m-0 flex list-none flex-wrap gap-2 p-0">
+                    @foreach ($storeLinks as $link)
+                        <li>
+                            <x-ui.button :href="$link->url" icon-right="external-link" target="_blank" rel="noopener noreferrer">
+                                {{ $link->platform->name }}<span class="hm-sr"> {{ __('release.show.new_tab') }}</span>
+                            </x-ui.button>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        </section>
+    @endif
+
     <section class="hm-card" aria-labelledby="bilgiler-baslik">
         <div class="hm-card__head">
             <h2 id="bilgiler-baslik" class="hm-h3">{{ __('release.show.details') }}</h2>
@@ -53,6 +73,10 @@
             @include('panel.releases.partials.tracks', ['release' => $release])
         @endif
     </section>
+
+    @if ($requestsVisible)
+        @include('panel.releases.partials.requests', ['release' => $release, 'canCorrection' => $canCorrection, 'canTakedown' => $canTakedown])
+    @endif
 
     <section class="hm-card" aria-labelledby="gecmis-baslik">
         <div class="hm-card__head">

@@ -19,4 +19,18 @@ interface SpotifyCatalog
      * @throws SpotifyUnavailable
      */
     public function findArtist(string $id): ?SpotifyArtist;
+
+    /**
+     * Yayın takibi: UPC ile albüm araması.
+     *
+     * @throws SpotifyUnavailable
+     */
+    public function findAlbumByUpc(string $upc): ?SpotifyAlbum;
+
+    /**
+     * Yayın takibi: ISRC ile parça araması.
+     *
+     * @throws SpotifyUnavailable
+     */
+    public function findTrackByIsrc(string $isrc): ?SpotifyTrack;
 }

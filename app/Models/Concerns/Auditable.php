@@ -2,6 +2,7 @@
 
 namespace App\Models\Concerns;
 
+use App\Support\Admin\AdminContext;
 use App\Support\Audit\AuditLogger;
 use Illuminate\Database\Eloquent\Model;
 
@@ -35,7 +36,7 @@ trait Auditable
      */
     protected static function writeAudit(Model $model, string $event, array $changes): void
     {
-        if (! auth('admin')->check()) {
+        if (! AdminContext::active()) {
             return;
         }
 

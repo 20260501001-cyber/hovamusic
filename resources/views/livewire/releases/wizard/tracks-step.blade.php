@@ -80,9 +80,30 @@
                                     <x-ui.field name="form.version" :label="__('release.tracks.fields.version')" :help="__('release.info.version_help')" :optional="true" maxlength="120" wire:model.live.blur="form.version" />
                                 </div>
 
+                                @if ($track->isrc_source === \App\Enums\IsrcSource::Hova)
+                                    <div class="hm-kv">
+                                        <span class="hm-label">{{ __('release.tracks.fields.isrc') }}</span>
+                                        <span class="hm-code">{{ $track->formattedIsrc() }}</span>
+                                        <p class="hm-field__help">{{ __('release.tracks.fields.isrc_assigned') }}</p>
+                                    </div>
+                                @else
+                                    <fieldset class="hm-field m-0 border-0 p-0">
+                                        <legend class="hm-label">{{ __('release.tracks.fields.isrc') }}</legend>
+                                        <div class="grid gap-2 sm:grid-cols-2" role="radiogroup">
+                                            <x-ui.choice name="track-isrc-mode" id="isrc-own-{{ $track->ulid }}" value="1" :title="__('release.tracks.fields.isrc_have')"
+                                                :checked="($form['has_own_isrc'] ?? '0') === '1'" wire:model.live="form.has_own_isrc" />
+                                            <x-ui.choice name="track-isrc-mode" id="isrc-none-{{ $track->ulid }}" value="0" :title="__('release.tracks.fields.isrc_none')"
+                                                :description="__('release.tracks.fields.isrc_none_help')"
+                                                :checked="($form['has_own_isrc'] ?? '0') !== '1'" wire:model.live="form.has_own_isrc" />
+                                        </div>
+                                    </fieldset>
+                                    @if (($form['has_own_isrc'] ?? '0') === '1')
+                                        <x-ui.field name="form.isrc" :label="__('release.tracks.fields.isrc_code')" :help="__('release.tracks.fields.isrc_help')" :mono="true"
+                                            maxlength="20" autocomplete="off" wire:model.live.blur="form.isrc" />
+                                    @endif
+                                @endif
+
                                 <div class="grid gap-4 sm:grid-cols-2">
-                                    <x-ui.field name="form.isrc" :label="__('release.tracks.fields.isrc')" :help="__('release.tracks.fields.isrc_help')" :optional="true" :mono="true"
-                                        maxlength="20" autocomplete="off" wire:model.live.blur="form.isrc" />
                                     <x-ui.select name="form.language" id="s-form-language" :label="__('release.tracks.fields.language')" :selected="$form['language'] ?? ''"
                                         :options="['' => __('release.info.select_language')] + $languages" wire:model.live="form.language" />
                                 </div>

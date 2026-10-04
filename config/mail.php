@@ -14,7 +14,8 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'log'),
+    // Resend anahtarı yoksa e-postalar gönderilmez, log dosyasına yazılır.
+    'default' => env('MAIL_MAILER', env('RESEND_API_KEY') ? 'resend' : 'log'),
 
     /*
     |--------------------------------------------------------------------------
@@ -113,6 +114,18 @@ return [
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
+    ],
+
+    /*
+    | Markdown e-postaları resources/views/vendor/mail altındaki Hova Music
+    | şablonları ve tasarım tokenlarından türetilen "hova" temasıyla çizilir.
+    */
+
+    'markdown' => [
+        'theme' => 'hova',
+        'paths' => [
+            resource_path('views/vendor/mail'),
+        ],
     ],
 
 ];

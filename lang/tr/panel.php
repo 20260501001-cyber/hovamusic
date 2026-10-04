@@ -7,9 +7,16 @@ return [
         'releases' => 'Yayınlarım',
         'artists' => 'Sanatçılar',
         'account' => 'Hesap ayarları',
+        'notifications' => 'Bildirimler',
+        'unread' => ':count okunmamış bildirim',
         'logout' => 'Çıkış yap',
         'open' => 'Menüyü aç',
         'close' => 'Menüyü kapat',
+    ],
+    'impersonation' => [
+        'banner' => 'Görüntüleme modu: :name (:email) hesabını onun gördüğü gibi görüntülüyorsun. Değişiklik yapılamaz.',
+        'end' => 'Görüntülemeyi bitir',
+        'blocked' => 'Görüntüleme modunda değişiklik yapılamaz.',
     ],
     'dashboard' => [
         'greeting' => 'Merhaba, :name',

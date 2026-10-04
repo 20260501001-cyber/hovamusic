@@ -8,12 +8,14 @@ use App\Domain\Spotify\FakeSpotifyCatalog;
 use App\Domain\Spotify\SpotifyCatalog;
 use App\Domain\Spotify\SpotifyWebApiCatalog;
 use App\Domain\Spotify\UnavailableSpotifyCatalog;
+use App\Domain\Users\Impersonation;
 use App\Models\Admin;
 use App\Support\Audit\AuditLogger;
 use App\Support\Settings;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -50,6 +52,11 @@ class AppServiceProvider extends ServiceProvider
     {
         Model::shouldBeStrict(! $this->app->isProduction());
 
+        // Geliştirmede Resend anahtarı yoksa e-postalar log'a yazılır.
+        if (! $this->app->isProduction() && config('mail.default') === 'resend' && blank(config('services.resend.key'))) {
+            config(['mail.default' => 'log']);
+        }
+
         Date::use(CarbonImmutable::class);
 
         // CSP satır içi script'e yalnızca nonce ile izin veriyor. Filament'in
@@ -72,7 +79,10 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Event::listen(Login::class, function (Login $event): void {
-            if (method_exists($event->user, 'forceFill')) {
+            // Admin kullanıcı olarak görüntülemeye başladığında kullanıcının son giriş bilgisi değişmez.
+            $impersonating = $event->guard === 'web' && app(Impersonation::class)->pending();
+
+            if (! $impersonating && method_exists($event->user, 'forceFill')) {
                 $event->user->forceFill([
                     'last_login_at' => now(),
                     'last_login_ip' => request()->ip(),
@@ -81,6 +91,13 @@ class AppServiceProvider extends ServiceProvider
 
             if ($event->user instanceof Admin) {
                 app(AuditLogger::class)->record('admin.login', $event->user, actor: $event->user);
+            }
+        });
+
+        // Admin çıkış yaparsa açık görüntüleme kaydı kapatılır.
+        Event::listen(Logout::class, function (Logout $event): void {
+            if ($event->guard === 'admin' && app(Impersonation::class)->pending()) {
+                app(Impersonation::class)->end(request());
             }
         });
 

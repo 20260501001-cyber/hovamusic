@@ -53,6 +53,7 @@ class ManageSettings extends Page
             'release_min_lead_days' => $settings->releaseLeadDays(),
             'cover_max_mb' => $settings->int('cover_max_mb'),
             'audio_max_mb' => $settings->int('audio_max_mb'),
+            'isrc_registrant' => (string) $settings->get('isrc_registrant'),
         ]);
     }
 
@@ -84,6 +85,12 @@ class ManageSettings extends Page
                     ->maxValue(4096)
                     ->suffix('MB')
                     ->required(),
+                TextInput::make('isrc_registrant')
+                    ->label('ISRC öneki (ülke + kayıt sahibi kodu)')
+                    ->helperText('PPL\'in verdiği ilk beş karakter, ör. GXLM5. "ISRC kodum yok" diyen kullanıcıların parçalarına bu önekle sırayla kod atanır; kullanıcılar bu önekle başlayan kod giremez.')
+                    ->length(5)
+                    ->regex('/^[A-Za-z]{2}[A-Za-z0-9]{3}$/')
+                    ->required(),
             ]);
     }
 
@@ -103,18 +110,25 @@ class ManageSettings extends Page
 
     public function save(Settings $settings, AuditLogger $audit): void
     {
-        $data = array_map('intval', $this->form->getState());
+        $state = $this->form->getState();
+        $data = [
+            'release_min_lead_days' => (int) $state['release_min_lead_days'],
+            'cover_max_mb' => (int) $state['cover_max_mb'],
+            'audio_max_mb' => (int) $state['audio_max_mb'],
+            'isrc_registrant' => strtoupper(trim((string) $state['isrc_registrant'])),
+        ];
         $before = [
             'release_min_lead_days' => $settings->releaseLeadDays(),
             'cover_max_mb' => $settings->int('cover_max_mb'),
             'audio_max_mb' => $settings->int('audio_max_mb'),
+            'isrc_registrant' => (string) $settings->get('isrc_registrant'),
         ];
 
         $settings->put($data);
 
         $changes = collect($data)
-            ->filter(fn (int $value, string $key): bool => $before[$key] !== $value)
-            ->map(fn (int $value, string $key): array => ['old' => $before[$key], 'new' => $value])
+            ->filter(fn (int|string $value, string $key): bool => $before[$key] !== $value)
+            ->map(fn (int|string $value, string $key): array => ['old' => $before[$key], 'new' => $value])
             ->all();
 
         if ($changes !== []) {

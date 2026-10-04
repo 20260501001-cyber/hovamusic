@@ -69,6 +69,37 @@ class SpotifyWebApiCatalog implements SpotifyCatalog
         return SpotifyArtist::fromApi($response->json());
     }
 
+    public function findAlbumByUpc(string $upc): ?SpotifyAlbum
+    {
+        $upc = preg_replace('/\D/', '', $upc) ?? '';
+
+        if ($upc === '') {
+            return null;
+        }
+
+        $item = $this->get('/search', ['q' => 'upc:'.$upc, 'type' => 'album', 'limit' => 1])->json('albums.items.0');
+
+        return is_array($item) && isset($item['id'], $item['name']) ? SpotifyAlbum::fromApi($item) : null;
+    }
+
+    public function findTrackByIsrc(string $isrc): ?SpotifyTrack
+    {
+        $isrc = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $isrc) ?? '');
+
+        if ($isrc === '') {
+            return null;
+        }
+
+        $items = $this->get('/search', ['q' => 'isrc:'.$isrc, 'type' => 'track', 'limit' => 5])->json('tracks.items', []);
+
+        $match = collect(is_array($items) ? $items : [])
+            ->filter(fn ($item): bool => is_array($item) && isset($item['id'], $item['name']))
+            ->map(fn (array $item): SpotifyTrack => SpotifyTrack::fromApi($item))
+            ->first(fn (SpotifyTrack $track): bool => $track->isrc === $isrc);
+
+        return $match;
+    }
+
     /**
      * @param  array<string, mixed>  $query
      */

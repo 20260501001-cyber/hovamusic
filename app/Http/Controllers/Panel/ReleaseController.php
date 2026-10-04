@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Panel;
 
 use App\Domain\Media\MediaUrl;
+use App\Domain\Releases\ReleaseRequests;
+use App\Domain\Users\Impersonation;
 use App\Enums\ReleaseStatus;
+use App\Enums\RequestType;
 use App\Http\Controllers\Controller;
 use App\Livewire\Releases\Wizard\CoverStep;
 use App\Livewire\Releases\Wizard\InfoStep;
@@ -50,24 +53,34 @@ class ReleaseController extends Controller
             ->with('flash', __('release.list.created'));
     }
 
-    public function show(Release $release): View
+    public function show(Release $release, ReleaseRequests $requests): View
     {
         Gate::authorize('view', $release);
 
-        $release->load(['cover', 'artists', 'genre', 'subgenre', 'platforms', 'tracks.audio', 'tracks.artists', 'statusLogs']);
+        $release->load(['cover', 'artists', 'genre', 'subgenre', 'platforms', 'tracks.audio', 'tracks.artists', 'statusLogs', 'storeLinks.platform', 'requests']);
 
         return view('panel.releases.show', [
             'release' => $release,
             'coverUrl' => $release->cover?->isValid() ? MediaUrl::temporary($release->cover) : null,
+            'storeLinks' => $release->status === ReleaseStatus::Live
+                ? $release->storeLinks->sortBy(fn ($link) => [$link->platform->sort, $link->platform->name])->values()
+                : collect(),
+            'requestsVisible' => $release->requests->isNotEmpty() || in_array($release->status, ReleaseRequests::OPEN_STATUSES, true),
+            'canCorrection' => $requests->canOpen($release, RequestType::Correction),
+            'canTakedown' => $requests->canOpen($release, RequestType::Takedown),
         ]);
     }
 
-    public function edit(Release $release, int $step = 1): View|RedirectResponse
+    public function edit(Release $release, Impersonation $impersonation, int $step = 1): View|RedirectResponse
     {
         Gate::authorize('view', $release);
 
         if (! $release->isEditable()) {
             return redirect()->route('panel.releases.show', $release)->with('flash', __('release.show.locked'));
+        }
+
+        if ($impersonation->active()) {
+            return redirect()->route('panel.releases.show', $release)->with('flash', __('panel.impersonation.blocked'));
         }
 
         $step = max(1, min($step, count(self::STEPS)));

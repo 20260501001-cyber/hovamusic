@@ -87,4 +87,12 @@ class Admin extends Authenticatable implements FilamentUser, HasAppAuthenticatio
     {
         return $this->hasRole(AdminRole::SuperAdmin->value);
     }
+
+    /**
+     * Yayınları, talepleri ve inceleme şablonlarını yönetebilir: Süper Admin ve İnceleme Editörü.
+     */
+    public function isReviewer(): bool
+    {
+        return $this->hasAnyRole([AdminRole::SuperAdmin->value, AdminRole::ReviewEditor->value]);
+    }
 }

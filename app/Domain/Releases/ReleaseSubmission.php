@@ -2,6 +2,8 @@
 
 namespace App\Domain\Releases;
 
+use App\Domain\Isrc\IsrcAllocator;
+use App\Domain\Isrc\IsrcExhausted;
 use App\Domain\Plans\PlanGate;
 use App\Enums\ReleaseStatus;
 use App\Models\Release;
@@ -19,6 +21,7 @@ class ReleaseSubmission
         private readonly ReleaseValidator $validator,
         private readonly ReleaseWorkflow $workflow,
         private readonly PlanGate $plans,
+        private readonly IsrcAllocator $isrc,
     ) {}
 
     /**
@@ -53,6 +56,19 @@ class ReleaseSubmission
             throw new SubmissionFailed($errors);
         }
 
+        try {
+            return $this->persist($release, $user);
+        } catch (IsrcExhausted $exhausted) {
+            throw new SubmissionFailed(['isrc' => [$exhausted->getMessage()]]);
+        }
+    }
+
+    /**
+     * Onay kayıtları, ISRC ataması ("ISRC kodum yok" diyen parçalar) ve durum geçişi
+     * tek işlemde yapılır.
+     */
+    private function persist(Release $release, User $user): Release
+    {
         return DB::transaction(function () use ($release, $user): Release {
             $request = request();
 
@@ -67,6 +83,8 @@ class ReleaseSubmission
                     'accepted_at' => now(),
                 ]);
             }
+
+            $this->isrc->assignMissing($release, $user);
 
             return $this->workflow->transition($release, ReleaseStatus::InReview, $user);
         });
