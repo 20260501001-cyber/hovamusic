@@ -30,6 +30,9 @@
             <x-ui.checkbox name="consents[uyelik-sozlesmesi]" id="consent-terms">
                 <a href="{{ route('legal.show', 'uyelik-sozlesmesi') }}" class="hm-link" target="_blank" rel="noopener">{{ __('auth.register.consent_terms_link') }}</a> {{ __('auth.register.consent_terms_after') }}
             </x-ui.checkbox>
+            <x-ui.checkbox name="consents[acik-riza]" id="consent-explicit" :description="__('auth.register.consent_explicit_help')">
+                <a href="{{ route('legal.show', 'acik-riza-metni') }}" class="hm-link" target="_blank" rel="noopener">{{ __('auth.register.consent_explicit_link') }}</a> {{ __('auth.register.consent_explicit_after') }}
+            </x-ui.checkbox>
         </div>
 
         <x-ui.turnstile />

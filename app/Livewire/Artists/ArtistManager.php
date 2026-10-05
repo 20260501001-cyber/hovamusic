@@ -3,6 +3,7 @@
 namespace App\Livewire\Artists;
 
 use App\Domain\Artists\AppleMusicLinkParser;
+use App\Domain\Plans\GateResult;
 use App\Domain\Plans\PlanGate;
 use App\Domain\Spotify\SpotifyArtist;
 use App\Domain\Spotify\SpotifyCatalog;
@@ -67,7 +68,7 @@ class ArtistManager extends Component
         $gate = $plans->canAddArtist(auth()->user());
 
         if (! $gate->allowed) {
-            $this->listError = (string) $gate->reason;
+            $this->denied($gate);
 
             return;
         }
@@ -187,7 +188,7 @@ class ArtistManager extends Component
         if ($artist) {
             $this->authorize('update', $artist);
         } elseif (! ($gate = app(PlanGate::class)->canAddArtist($user))->allowed) {
-            $this->listError = (string) $gate->reason;
+            $this->denied($gate);
 
             return;
         }
@@ -324,5 +325,20 @@ class ArtistManager extends Component
         return view('livewire.artists.artist-manager', [
             'artists' => auth()->user()->artists()->get(),
         ]);
+    }
+
+    /**
+     * Plan yoksa ya da sanatçı limiti dolduysa kullanıcı plan sayfasına gider.
+     */
+    private function denied(GateResult $gate): void
+    {
+        if ($gate->redirectToPlans) {
+            session()->flash('flash', (string) $gate->reason);
+            $this->redirectRoute('panel.plans.index');
+
+            return;
+        }
+
+        $this->listError = (string) $gate->reason;
     }
 }

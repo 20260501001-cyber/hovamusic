@@ -59,7 +59,7 @@ class AdminPanelProvider extends PanelProvider
             ->font('Archivo', provider: LocalFontProvider::class)
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->darkMode(true)
-            ->navigationGroups(['İnceleme', 'Kullanıcılar', 'Katalog', 'Sistem'])
+            ->navigationGroups(['İnceleme', 'Kullanıcılar', 'Satış', 'Finans', 'İçerik', 'Katalog', 'Sistem'])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Domain\Billing\PolarClient;
 use App\Domain\Media\AudioProbe;
 use App\Domain\Media\FfprobeAudioProbe;
 use App\Domain\Spotify\FakeSpotifyCatalog;
@@ -44,6 +45,8 @@ class AppServiceProvider extends ServiceProvider
                 ? new SpotifyWebApiCatalog($id, $secret)
                 : new UnavailableSpotifyCatalog;
         });
+
+        $this->app->singleton(PolarClient::class, fn (): PolarClient => PolarClient::fromConfig());
 
         $this->app->bind(AudioProbe::class, fn (): AudioProbe => new FfprobeAudioProbe((string) config('hova.media.ffprobe')));
     }

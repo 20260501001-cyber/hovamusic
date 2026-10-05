@@ -1,6 +1,13 @@
 import './uploads';
 
 document.addEventListener('click', (event) => {
+    if (event.target.closest('[data-cookie-settings]')) {
+        const banner = document.querySelector('[data-cookie-banner]');
+        banner?.removeAttribute('hidden');
+        banner?.querySelector('details')?.setAttribute('open', '');
+        banner?.querySelector('input:not([disabled]), button')?.focus();
+    }
+
     const opener = event.target.closest('[data-drawer-open]');
     const closer = event.target.closest('[data-drawer-close]');
 

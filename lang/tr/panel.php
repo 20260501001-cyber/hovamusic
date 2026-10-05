@@ -8,6 +8,7 @@ return [
         'artists' => 'Sanatçılar',
         'account' => 'Hesap ayarları',
         'notifications' => 'Bildirimler',
+        'plan' => 'Planım',
         'unread' => ':count okunmamış bildirim',
         'logout' => 'Çıkış yap',
         'open' => 'Menüyü aç',
@@ -24,6 +25,7 @@ return [
         'empty_body' => 'Yayınların ve durumları burada listelenecek.',
         'recent' => 'Son yayınların',
         'all_releases' => 'Tüm yayınlar',
+        'see_plans' => 'Planları gör',
     ],
     'account' => [
         'profile' => 'Profil',

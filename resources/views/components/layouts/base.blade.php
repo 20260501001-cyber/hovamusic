@@ -21,6 +21,7 @@
 </head>
 <body {{ $attributes }}>
     {{ $slot }}
+    <x-cookie-banner />
     @stack('scripts')
 </body>
 </html>

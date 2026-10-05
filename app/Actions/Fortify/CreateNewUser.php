@@ -2,6 +2,7 @@
 
 namespace App\Actions\Fortify;
 
+use App\Domain\Legal\ConsentRecorder;
 use App\Enums\AccountType;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -45,16 +46,15 @@ class CreateNewUser implements CreatesNewUsers
                 'account_type' => $input['account_type'],
             ]);
 
-            $request = request();
+            $consents = app(ConsentRecorder::class);
 
-            foreach (config('hova.consents.registration') as $type => $version) {
-                $user->consents()->create([
-                    'type' => $type,
-                    'document_version' => $version,
-                    'ip_address' => $request->ip(),
-                    'user_agent' => Str::limit((string) $request->userAgent(), 500, ''),
-                    'accepted_at' => now(),
-                ]);
+            foreach (array_keys(config('hova.consents.registration')) as $type) {
+                $consents->record($user, $type);
+            }
+
+            // Açık rıza isteğe bağlıdır; verildiyse ayrıca kaydedilir.
+            if (filter_var($input['consents']['acik-riza'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+                $consents->record($user, 'acik-riza');
             }
 
             return $user;

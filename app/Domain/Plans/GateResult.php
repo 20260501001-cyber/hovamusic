@@ -7,6 +7,7 @@ final readonly class GateResult
     private function __construct(
         public bool $allowed,
         public ?string $reason = null,
+        public bool $redirectToPlans = false,
     ) {}
 
     public static function allow(): self
@@ -14,8 +15,11 @@ final readonly class GateResult
         return new self(true);
     }
 
-    public static function deny(string $reason): self
+    /**
+     * @param  bool  $redirect  Kullanıcı plan sayfasına yönlendirilmeli mi
+     */
+    public static function deny(string $reason, bool $redirect = false): self
     {
-        return new self(false, $reason);
+        return new self(false, $reason, $redirect);
     }
 }

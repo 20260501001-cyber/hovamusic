@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Legal\LegalDocuments;
 use Illuminate\Contracts\View\View;
 
 class LegalPageController extends Controller
 {
-    public function __invoke(string $slug): View
+    public function __invoke(string $slug, LegalDocuments $documents): View
     {
-        $title = config("hova.legal_pages.{$slug}");
+        $document = $documents->document($slug);
 
-        abort_if($title === null, 404);
+        abort_if($document === null || ! $document->is_public, 404);
 
         return view('legal.show', [
-            'slug' => $slug,
-            'title' => $title,
-            'body' => view()->exists("legal.pages.{$slug}") ? view("legal.pages.{$slug}") : null,
+            'document' => $document,
+            'version' => $document->currentVersion,
         ]);
     }
 }

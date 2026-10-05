@@ -15,6 +15,7 @@ class DashboardController extends Controller
         return view('panel.dashboard', [
             'user' => $user,
             'releases' => $user->releases()->with(['cover', 'artists'])->latest('updated_at')->limit(5)->get(),
+            'hasPlan' => $user->activeSubscription() !== null,
         ]);
     }
 }

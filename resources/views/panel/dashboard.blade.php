@@ -4,6 +4,15 @@
         <h1 class="hm-h1">{{ __('panel.dashboard.greeting', ['name' => $user->name]) }}</h1>
     </div>
 
+    @unless ($hasPlan)
+        <x-ui.alert tone="info" :title="__('plans.index.none_title')">
+            {{ __('plans.index.none_body') }}
+            <x-slot:action>
+                <x-ui.button :href="route('panel.plans.index')" size="s" variant="primary">{{ __('panel.dashboard.see_plans') }}</x-ui.button>
+            </x-slot:action>
+        </x-ui.alert>
+    @endunless
+
     @if ($releases->isEmpty())
         <x-ui.empty-state :title="__('panel.dashboard.empty_title')" icon="disc">
             {{ __('panel.dashboard.empty_body') }}

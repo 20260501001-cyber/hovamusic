@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -92,6 +93,55 @@ class User extends Authenticatable implements MustVerifyEmail
     public function mediaFiles(): HasMany
     {
         return $this->hasMany(MediaFile::class);
+    }
+
+    /**
+     * @return HasMany<Subscription, $this>
+     */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class)->latest('id');
+    }
+
+    /**
+     * @return HasMany<Order, $this>
+     */
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class)->latest('ordered_at')->latest('id');
+    }
+
+    /**
+     * @return HasMany<PlanHistory, $this>
+     */
+    public function planHistory(): HasMany
+    {
+        return $this->hasMany(PlanHistory::class)->orderByDesc('starts_at')->orderByDesc('id');
+    }
+
+    /**
+     * @return HasOne<PolarCustomer, $this>
+     */
+    public function polarCustomer(): HasOne
+    {
+        return $this->hasOne(PolarCustomer::class);
+    }
+
+    /**
+     * @return HasMany<DataRequest, $this>
+     */
+    public function dataRequests(): HasMany
+    {
+        return $this->hasMany(DataRequest::class)->latest('id');
+    }
+
+    /**
+     * Kullanımdaki abonelik; birden fazlaysa dönemi en geç biten.
+     */
+    public function activeSubscription(): ?Subscription
+    {
+        return $this->subscriptions()->getQuery()->reorder()->active()->with('plan')
+            ->orderByDesc('current_period_end')->orderByDesc('id')->first();
     }
 
     public function isLabel(): bool

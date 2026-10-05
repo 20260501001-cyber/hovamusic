@@ -22,6 +22,7 @@ class AccountController extends Controller
                 && in_array(session('status'), ['two-factor-authentication-confirmed', 'recovery-codes-generated'], true),
             'themes' => ThemePreference::cases(),
             'currencies' => DisplayCurrency::cases(),
+            'dataRequests' => $user->dataRequests()->limit(10)->get(),
         ]);
     }
 }

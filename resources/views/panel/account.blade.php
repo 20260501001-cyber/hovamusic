@@ -113,4 +113,6 @@
             <div><x-ui.button type="submit" variant="primary">{{ __('ui.save') }}</x-ui.button></div>
         </form>
     </section>
+
+    @include('panel.partials.privacy', ['user' => $user, 'dataRequests' => $dataRequests])
 </x-layouts.panel>

@@ -29,12 +29,11 @@ return [
         'client_secret' => env('SPOTIFY_CLIENT_SECRET'),
     ],
 
-    'paddle' => [
-        'seller_id' => env('PADDLE_SELLER_ID'),
-        'client_side_token' => env('PADDLE_CLIENT_SIDE_TOKEN'),
-        'api_key' => env('PADDLE_API_KEY'),
-        'webhook_secret' => env('PADDLE_WEBHOOK_SECRET'),
-        'sandbox' => env('PADDLE_SANDBOX', true),
+    'polar' => [
+        'access_token' => env('POLAR_ACCESS_TOKEN'),
+        'webhook_secret' => env('POLAR_WEBHOOK_SECRET'),
+        // sandbox ya da production
+        'server' => env('POLAR_SERVER', 'sandbox'),
     ],
 
     'ses' => [

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ReleaseArchiveController;
+use App\Http\Controllers\CookieConsentController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\LegalPageController;
@@ -9,16 +10,26 @@ use App\Http\Controllers\Panel\AccountController;
 use App\Http\Controllers\Panel\ArtistController;
 use App\Http\Controllers\Panel\DashboardController;
 use App\Http\Controllers\Panel\NotificationController;
+use App\Http\Controllers\Panel\PlanController;
 use App\Http\Controllers\Panel\PreferencesController;
+use App\Http\Controllers\Panel\PrivacyController;
 use App\Http\Controllers\Panel\ReleaseController;
 use App\Http\Controllers\Panel\ReleaseRequestController;
 use App\Http\Controllers\Panel\UploadController;
+use App\Http\Controllers\Webhooks\PolarWebhookController;
 use App\Http\Middleware\RestrictAdminIp;
 use App\Providers\Filament\AdminPanelProvider;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
+
+// Ödeme sağlayıcısı webhook'u: oturum ve CSRF yok; imza denetimi denetleyicide.
+Route::post('webhooks/polar', PolarWebhookController::class)
+    ->withoutMiddleware(['web'])
+    ->middleware('throttle:120,1')
+    ->name('webhooks.polar');
 Route::get('yasal/{slug}', LegalPageController::class)->name('legal.show');
+Route::post('cerez-tercihleri', CookieConsentController::class)->middleware('throttle:20,1')->name('cookies.store');
 
 Route::middleware(['auth', 'verified', 'account.active'])
     ->prefix('panel')
@@ -36,6 +47,16 @@ Route::middleware(['auth', 'verified', 'account.active'])
         Route::get('yayinlar/{release}/duzenle/{step?}', [ReleaseController::class, 'edit'])->whereNumber('step')->name('releases.edit');
         Route::delete('yayinlar/{release}', [ReleaseController::class, 'destroy'])->name('releases.destroy');
         Route::post('yayinlar/{release}/talepler', [ReleaseRequestController::class, 'store'])->middleware('throttle:10,1')->name('releases.requests.store');
+
+        Route::get('plan', [PlanController::class, 'index'])->name('plans.index');
+        Route::get('plan/siparisler', [PlanController::class, 'orders'])->name('plans.orders');
+        Route::post('plan/yonet', [PlanController::class, 'portal'])->middleware('throttle:10,1')->name('plans.portal');
+        Route::get('plan/odeme/{checkout}', [PlanController::class, 'processing'])->name('plans.processing');
+        Route::get('plan/{plan}', [PlanController::class, 'confirm'])->name('plans.confirm');
+        Route::post('plan/{plan}/odeme', [PlanController::class, 'checkout'])->middleware('throttle:10,1')->name('plans.checkout');
+
+        Route::post('hesap/veri-talepleri', [PrivacyController::class, 'store'])->middleware('throttle:5,1')->name('privacy.store');
+        Route::get('hesap/veri-talepleri/{dataRequest}/indir', [PrivacyController::class, 'download'])->middleware('signed')->name('privacy.download');
 
         Route::get('bildirimler', [NotificationController::class, 'index'])->name('notifications.index');
         Route::post('bildirimler/okundu', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');

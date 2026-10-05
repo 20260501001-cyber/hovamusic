@@ -31,7 +31,7 @@ class ReleaseSubmission
      */
     public function submit(Release $release, User $user, array $declarations): Release
     {
-        $gate = $this->plans->canSubmitRelease($user);
+        $gate = $this->plans->canSubmitRelease($user, $release);
 
         if (! $gate->allowed) {
             throw new SubmissionFailed(['plan' => [(string) $gate->reason]]);
@@ -85,6 +85,11 @@ class ReleaseSubmission
             }
 
             $this->isrc->assignMissing($release, $user);
+
+            // Yayın limiti ilk gönderimle düşer; düzeltme sonrası yeniden gönderim sayılmaz.
+            if ($release->first_submitted_at === null) {
+                $release->forceFill(['first_submitted_at' => now()])->save();
+            }
 
             return $this->workflow->transition($release, ReleaseStatus::InReview, $user);
         });

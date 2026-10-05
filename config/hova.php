@@ -15,6 +15,7 @@ return [
         'password_reset_per_hour' => 5,
     ],
 
+    // Kayıtta zorunlu onaylar; sürüm numarası admin panelindeki yasal metinden okunur.
     'consents' => [
         'registration' => [
             'kvkk-aydinlatma' => '1',
@@ -50,15 +51,6 @@ return [
 
     // Veritabanı UTC tutar; kullanıcıya gösterilen saatler bu dilimdedir.
     'display_timezone' => 'Europe/Istanbul',
-
-    'legal_pages' => [
-        'kvkk-aydinlatma-metni' => 'KVKK Aydınlatma Metni',
-        'uyelik-sozlesmesi' => 'Üyelik Sözleşmesi',
-        'gizlilik-politikasi' => 'Gizlilik Politikası',
-        'cerez-politikasi' => 'Çerez Politikası',
-        'mesafeli-satis-sozlesmesi' => 'Mesafeli Satış Sözleşmesi',
-        'on-bilgilendirme-formu' => 'Ön Bilgilendirme Formu',
-    ],
 
     'trusted_proxies' => env('TRUSTED_PROXIES'),
 

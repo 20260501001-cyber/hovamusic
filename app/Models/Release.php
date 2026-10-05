@@ -44,6 +44,7 @@ class Release extends Model
             'release_date' => 'date',
             'original_release_date' => 'date',
             'submitted_at' => 'datetime',
+            'first_submitted_at' => 'datetime',
             'locked_at' => 'datetime',
             'spotify_checked_at' => 'datetime',
             'wizard_step' => 'integer',

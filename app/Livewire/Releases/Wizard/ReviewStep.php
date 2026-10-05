@@ -49,6 +49,13 @@ class ReviewStep extends WizardStep
         try {
             $submission->submit($release, auth()->user(), $this->declarations);
         } catch (SubmissionFailed $failed) {
+            if (isset($failed->errors['plan'])) {
+                session()->flash('flash', (string) ($failed->errors['plan'][0] ?? ''));
+                $this->redirectRoute('panel.plans.index');
+
+                return;
+            }
+
             $this->showAll = true;
             $this->submitErrors = collect($failed->errors)
                 ->filter(fn ($messages, $key): bool => ! is_int($key))

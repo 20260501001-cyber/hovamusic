@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Panel;
 use App\Domain\Media\ChunkedUploads;
 use App\Domain\Media\OffsetMismatch;
 use App\Domain\Media\UploadRejected;
+use App\Domain\Plans\PlanGate;
 use App\Enums\UploadStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Panel\StartUploadRequest;
@@ -23,8 +24,14 @@ class UploadController extends Controller
 {
     public function __construct(private readonly ChunkedUploads $uploads) {}
 
-    public function store(StartUploadRequest $request): JsonResponse
+    public function store(StartUploadRequest $request, PlanGate $plans): JsonResponse
     {
+        $gate = $plans->canUpload($request->user());
+
+        if (! $gate->allowed) {
+            return response()->json(['message' => $gate->reason, 'plans_url' => route('panel.plans.index')], 422);
+        }
+
         try {
             $session = $this->uploads->start(
                 $request->user(),

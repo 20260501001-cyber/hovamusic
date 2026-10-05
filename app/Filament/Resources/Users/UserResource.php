@@ -2,11 +2,14 @@
 
 namespace App\Filament\Resources\Users;
 
+use App\Domain\Plans\PlanGate;
 use App\Enums\AccountType;
 use App\Enums\UserStatus;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\Pages\ViewUser;
+use App\Filament\Resources\Users\RelationManagers\OrdersRelationManager;
 use App\Filament\Resources\Users\RelationManagers\ReleasesRelationManager;
+use App\Filament\Resources\Users\RelationManagers\SubscriptionsRelationManager;
 use App\Models\User;
 use BackedEnum;
 use Filament\Actions\ViewAction;
@@ -61,6 +64,27 @@ class UserResource extends Resource
                     TextEntry::make('last_login_at')->label('Son giriş')->dateTime('d.m.Y H:i')->timezone($tz)->placeholder('—')
                         ->helperText(fn (User $record): ?string => $record->last_login_ip),
                 ]),
+            Section::make('Plan')
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('active_plan')->label('Aktif plan')
+                        ->state(fn (User $record): string => $record->activeSubscription()?->plan?->name ?? 'Yok'),
+                    TextEntry::make('plan_status')->label('Abonelik durumu')
+                        ->state(fn (User $record): ?string => $record->activeSubscription()?->status->label())
+                        ->placeholder('—'),
+                    TextEntry::make('period_end')->label('Dönem sonu')
+                        ->state(fn (User $record) => $record->activeSubscription()?->current_period_end)
+                        ->dateTime('d.m.Y H:i')->timezone($tz)->placeholder('—'),
+                    TextEntry::make('usage')->label('Bu dönem kullanım')
+                        ->state(function (User $record): string {
+                            $usage = app(PlanGate::class)->usage($record);
+
+                            return sprintf('%d yayın / %s · %d sanatçı / %s',
+                                $usage['releases_used'], $usage['release_limit'] ?? 'sınırsız',
+                                $usage['artists_used'], $usage['artist_limit'] ?? 'sınırsız');
+                        }),
+                ]),
+            ...UserExtraSections::sections(),
             Section::make('Durum')
                 ->schema([
                     TextEntry::make('status')->label('Durum')->badge()
@@ -105,6 +129,8 @@ class UserResource extends Resource
     {
         return [
             ReleasesRelationManager::class,
+            SubscriptionsRelationManager::class,
+            OrdersRelationManager::class,
         ];
     }
 

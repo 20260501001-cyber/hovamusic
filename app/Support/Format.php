@@ -2,12 +2,15 @@
 
 namespace App\Support;
 
+use Brick\Math\BigDecimal;
+use Brick\Math\BigNumber;
+use Brick\Math\RoundingMode;
 use Carbon\CarbonInterface;
 use NumberFormatter;
 
 /**
  * tr-TR biçimleri: süre "3:42", boyut "24,6 MB", örnekleme hızı "44,1 kHz",
- * tarih metinde "14 Kasım 2026", tabloda "14.11.2026".
+ * tarih metinde "14 Kasım 2026", tabloda "14.11.2026", para "$1.234,56".
  */
 class Format
 {
@@ -58,6 +61,22 @@ class Format
     public static function shortDate(?CarbonInterface $date): string
     {
         return $date ? $date->format('d.m.Y') : '';
+    }
+
+    /**
+     * Para tutarı, float'a çevrilmeden: "$1.234,56", "₺1.234,56", "€1.234,56".
+     */
+    public static function money(BigNumber|string|int $amount, string $currency = 'USD', int $scale = 2): string
+    {
+        $value = BigDecimal::of($amount)->toScale($scale, RoundingMode::HalfUp);
+        $negative = $value->isNegative();
+        [$integer, $fraction] = array_pad(explode('.', $value->abs()->toString(), 2), 2, '');
+        $integer = strrev(implode('.', str_split(strrev($integer), 3)));
+        $number = $integer.($scale > 0 ? ','.$fraction : '');
+        $currency = strtoupper($currency);
+        $symbol = ['USD' => '$', 'EUR' => '€', 'TRY' => '₺', 'GBP' => '£'][$currency] ?? null;
+
+        return ($negative ? '−' : '').($symbol !== null ? $symbol.$number : $number.' '.$currency);
     }
 
     public static function position(int $position): string

@@ -5,6 +5,7 @@ namespace App\Livewire\Releases\Wizard;
 use App\Domain\Media\CoverProcessor;
 use App\Domain\Media\CoverRejected;
 use App\Domain\Media\MediaUrl;
+use App\Domain\Plans\PlanGate;
 use App\Domain\Releases\ReleaseValidator;
 use App\Models\MediaFile;
 use App\Models\Release;
@@ -46,6 +47,15 @@ class CoverStep extends WizardStep
         $this->upload = null;
 
         if (! $file instanceof TemporaryUploadedFile) {
+            return;
+        }
+
+        $gate = app(PlanGate::class)->canUpload(auth()->user());
+
+        if (! $gate->allowed) {
+            $file->delete();
+            $this->coverErrors = [(string) $gate->reason];
+
             return;
         }
 
