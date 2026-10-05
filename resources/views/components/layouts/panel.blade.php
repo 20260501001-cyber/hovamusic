@@ -11,10 +11,12 @@
         ['route' => 'panel.dashboard', 'icon' => 'layout-dashboard', 'label' => __('panel.nav.dashboard')],
         ['route' => 'panel.releases.index', 'active' => 'panel.releases.*', 'icon' => 'disc-3', 'label' => __('panel.nav.releases')],
         ['route' => 'panel.artists', 'icon' => 'mic-vocal', 'label' => __('panel.nav.artists')],
+        ['route' => 'panel.earnings.index', 'active' => 'panel.earnings.*', 'icon' => 'wallet', 'label' => __('finance.nav.earnings')],
+        ['route' => 'panel.withdrawals.index', 'active' => 'panel.withdrawals.*', 'icon' => 'banknote', 'label' => __('finance.nav.withdrawals')],
         ['route' => 'panel.plans.index', 'active' => 'panel.plans.*', 'icon' => 'credit-card', 'label' => __('panel.nav.plan')],
         ['route' => 'panel.notifications.index', 'active' => 'panel.notifications.*', 'icon' => 'bell', 'label' => __('panel.nav.notifications'),
             'badge' => $unread > 0 ? ($unread > 99 ? '99+' : (string) $unread) : null, 'badge_label' => __('panel.nav.unread', ['count' => $unread])],
-        ['route' => 'panel.account', 'icon' => 'user-cog', 'label' => __('panel.nav.account')],
+        ['route' => 'panel.account', 'active' => ['panel.account', 'panel.finance.*', 'panel.tax-form.*'], 'icon' => 'user-cog', 'label' => __('panel.nav.account')],
     ];
 @endphp
 

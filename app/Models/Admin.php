@@ -95,4 +95,12 @@ class Admin extends Authenticatable implements FilamentUser, HasAppAuthenticatio
     {
         return $this->hasAnyRole([AdminRole::SuperAdmin->value, AdminRole::ReviewEditor->value]);
     }
+
+    /**
+     * Rapor içe aktarma, bakiye, para çekme ve kurları yönetebilir: Süper Admin ve Finans.
+     */
+    public function canManageFinance(): bool
+    {
+        return $this->hasAnyRole([AdminRole::SuperAdmin->value, AdminRole::Finance->value]);
+    }
 }

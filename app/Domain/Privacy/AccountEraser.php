@@ -15,16 +15,16 @@ use Illuminate\Support\Str;
 class AccountEraser
 {
     /**
-     * @var list<callable(User): void>
+     * @var array<string, callable(User): void>
      */
     private static array $hooks = [];
 
     /**
      * @param  callable(User): void  $hook
      */
-    public static function extend(callable $hook): void
+    public static function extend(string $key, callable $hook): void
     {
-        self::$hooks[] = $hook;
+        self::$hooks[$key] = $hook;
     }
 
     public function erase(User $user): void

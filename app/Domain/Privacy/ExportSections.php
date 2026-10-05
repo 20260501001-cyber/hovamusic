@@ -10,16 +10,16 @@ use App\Models\User;
 class ExportSections
 {
     /**
-     * @var list<callable(User): array<string, mixed>>
+     * @var array<string, callable(User): array<string, mixed>>
      */
     private static array $sections = [];
 
     /**
      * @param  callable(User): array<string, mixed>  $section
      */
-    public static function register(callable $section): void
+    public static function register(string $key, callable $section): void
     {
-        self::$sections[] = $section;
+        self::$sections[$key] = $section;
     }
 
     /**

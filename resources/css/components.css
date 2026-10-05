@@ -344,3 +344,40 @@
 .hm-cookie[hidden] { display: none; }
 .hm-cookie__inner { display: grid; gap: var(--space-3); padding: var(--space-4); }
 .hm-cookie__details summary::-webkit-details-marker { display: none; }
+
+/* Gelir grafiği: sunucuda çizilen SVG, JavaScript yok */
+.hm-chart { display: block; width: 100%; height: auto; }
+.hm-chart__grid { stroke: var(--line); stroke-width: 1; }
+.hm-chart__bar { fill: var(--accent); }
+.hm-chart__bar--empty { fill: var(--line-strong); }
+.hm-chart__label { fill: var(--ink-muted); font: 400 11px var(--font-mono); }
+.hm-chart__axis { fill: var(--ink-subtle); font: 400 11px var(--font-mono); }
+
+/* Kırılım tablosunda pay çubuğu */
+.hm-share { display: grid; grid-template-columns: minmax(64px, 1fr) 44px; align-items: center; gap: var(--space-2); min-width: 120px; }
+.hm-share__track { height: 4px; background: var(--surface-hover); border-radius: var(--radius-pill); overflow: hidden; }
+.hm-share__bar { display: block; height: 100%; background: var(--accent); }
+.hm-share__pct { font: 400 12px/1 var(--font-mono); color: var(--ink-muted); text-align: right; }
+
+/* Ön koşul listesi */
+.hm-checklist { list-style: none; margin: 0; padding: 0; display: grid; }
+.hm-checklist__item { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--line); }
+.hm-checklist__item:last-child { border-bottom: 0; }
+.hm-checklist__label { flex: 1; min-width: 0; }
+.hm-checklist__done { color: var(--success); }
+.hm-checklist__missing { color: var(--ink-subtle); }
+
+/* Rakam */
+.hm-num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* Filtre satırı */
+.hm-filter { display: flex; flex-wrap: wrap; align-items: end; gap: var(--space-3); }
+.hm-filter .hm-field { min-width: 140px; }
+
+/* Form bölümleri arası */
+.hm-fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: var(--space-4); }
+.hm-fieldset legend { padding: 0; margin-bottom: var(--space-3); font: 600 15px/20px var(--font-sans); color: var(--ink); }
+.hm-form-grid { display: grid; gap: var(--space-4); }
+@media (min-width: 720px) {
+  .hm-form-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

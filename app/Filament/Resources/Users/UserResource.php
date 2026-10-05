@@ -7,9 +7,11 @@ use App\Enums\AccountType;
 use App\Enums\UserStatus;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\Pages\ViewUser;
+use App\Filament\Resources\Users\RelationManagers\LedgerEntriesRelationManager;
 use App\Filament\Resources\Users\RelationManagers\OrdersRelationManager;
 use App\Filament\Resources\Users\RelationManagers\ReleasesRelationManager;
 use App\Filament\Resources\Users\RelationManagers\SubscriptionsRelationManager;
+use App\Filament\Resources\Users\RelationManagers\WithdrawalsRelationManager;
 use App\Models\User;
 use BackedEnum;
 use Filament\Actions\ViewAction;
@@ -26,7 +28,7 @@ use UnitEnum;
 
 /**
  * Kullanıcılar: liste, detay ve yayınları; askıya alma, banlama ve kullanıcı olarak
- * görüntüleme. Yalnızca Süper Admin. Plan ve bakiye alanları sonraki fazlarda eklenecek.
+ * görüntüleme; plan, bakiye ve ödemeler. Yalnızca Süper Admin.
  */
 class UserResource extends Resource
 {
@@ -131,6 +133,8 @@ class UserResource extends Resource
             ReleasesRelationManager::class,
             SubscriptionsRelationManager::class,
             OrdersRelationManager::class,
+            LedgerEntriesRelationManager::class,
+            WithdrawalsRelationManager::class,
         ];
     }
 

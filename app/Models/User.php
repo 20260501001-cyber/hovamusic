@@ -136,6 +136,46 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * @return HasOne<UserProfile, $this>
+     */
+    public function profile(): HasOne
+    {
+        return $this->hasOne(UserProfile::class);
+    }
+
+    /**
+     * @return HasOne<PayoutMethod, $this>
+     */
+    public function payoutMethod(): HasOne
+    {
+        return $this->hasOne(PayoutMethod::class);
+    }
+
+    /**
+     * @return HasMany<TaxForm, $this>
+     */
+    public function taxForms(): HasMany
+    {
+        return $this->hasMany(TaxForm::class)->latest('signed_at');
+    }
+
+    /**
+     * @return HasMany<Withdrawal, $this>
+     */
+    public function withdrawals(): HasMany
+    {
+        return $this->hasMany(Withdrawal::class)->latest('id');
+    }
+
+    /**
+     * @return HasMany<LedgerEntry, $this>
+     */
+    public function ledgerEntries(): HasMany
+    {
+        return $this->hasMany(LedgerEntry::class)->latest('id');
+    }
+
+    /**
      * Kullanımdaki abonelik; birden fazlaysa dönemi en geç biten.
      */
     public function activeSubscription(): ?Subscription

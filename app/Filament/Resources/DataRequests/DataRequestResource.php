@@ -41,7 +41,7 @@ class DataRequestResource extends Resource
     protected static ?int $navigationSort = 50;
 
     /**
-     * @var list<callable(DataRequest): list<string>>
+     * @var array<string, callable(DataRequest): list<string>>
      */
     private static array $warnings = [];
 
@@ -50,9 +50,9 @@ class DataRequestResource extends Resource
      *
      * @param  callable(DataRequest): list<string>  $warning
      */
-    public static function warnWith(callable $warning): void
+    public static function warnWith(string $key, callable $warning): void
     {
-        self::$warnings[] = $warning;
+        self::$warnings[$key] = $warning;
     }
 
     public static function getNavigationBadge(): ?string

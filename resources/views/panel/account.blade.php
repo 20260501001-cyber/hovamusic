@@ -18,6 +18,32 @@
         </form>
     </section>
 
+    <section class="hm-card" aria-labelledby="odeme-baslik">
+        <div class="hm-card__head">
+            <h2 id="odeme-baslik" class="hm-h3">{{ __('finance.account.title') }}</h2>
+            <p class="hm-muted m-0 text-sm">{{ __('finance.account.hint') }}</p>
+        </div>
+        <div class="hm-card__body">
+            <ul class="hm-checklist">
+                @foreach ([
+                    ['done' => $financeRequirements['profile'], 'label' => __('finance.profile.title'), 'url' => route('panel.finance.profile')],
+                    ['done' => $financeRequirements['payout'], 'label' => __('finance.payout_page.title'), 'url' => route('panel.finance.payout')],
+                    ['done' => $financeRequirements['tax_form'], 'label' => __('finance.tax_form_page.title'), 'url' => route('panel.tax-form.create')],
+                ] as $req)
+                    <li class="hm-checklist__item">
+                        @if ($req['done'])
+                            <x-lucide-circle-check class="hm-icon hm-checklist__done" width="20" height="20" aria-hidden="true" />
+                        @else
+                            <x-lucide-circle-dashed class="hm-icon hm-checklist__missing" width="20" height="20" aria-hidden="true" />
+                        @endif
+                        <span class="hm-checklist__label">{{ $req['label'] }} <span class="hm-sr">({{ $req['done'] ? __('finance.withdrawals_page.req_done') : __('finance.withdrawals_page.req_missing') }})</span></span>
+                        <a href="{{ $req['url'] }}" class="hm-link text-sm">{{ $req['done'] ? __('finance.withdrawals_page.req_edit') : __('finance.withdrawals_page.req_complete') }}</a>
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+    </section>
+
     <section class="hm-card" aria-labelledby="sifre-baslik">
         <div class="hm-card__head">
             <h2 id="sifre-baslik" class="hm-h3">{{ __('panel.account.password') }}</h2>

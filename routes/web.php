@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ReleaseArchiveController;
+use App\Http\Controllers\Admin\TaxFormDownloadController;
 use App\Http\Controllers\CookieConsentController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ImpersonationController;
@@ -8,14 +9,19 @@ use App\Http\Controllers\LegalPageController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\Panel\AccountController;
 use App\Http\Controllers\Panel\ArtistController;
+use App\Http\Controllers\Panel\BillingProfileController;
 use App\Http\Controllers\Panel\DashboardController;
+use App\Http\Controllers\Panel\EarningsController;
 use App\Http\Controllers\Panel\NotificationController;
+use App\Http\Controllers\Panel\PayoutMethodController;
 use App\Http\Controllers\Panel\PlanController;
 use App\Http\Controllers\Panel\PreferencesController;
 use App\Http\Controllers\Panel\PrivacyController;
 use App\Http\Controllers\Panel\ReleaseController;
 use App\Http\Controllers\Panel\ReleaseRequestController;
+use App\Http\Controllers\Panel\TaxFormController;
 use App\Http\Controllers\Panel\UploadController;
+use App\Http\Controllers\Panel\WithdrawalController;
 use App\Http\Controllers\Webhooks\PolarWebhookController;
 use App\Http\Middleware\RestrictAdminIp;
 use App\Providers\Filament\AdminPanelProvider;
@@ -55,6 +61,18 @@ Route::middleware(['auth', 'verified', 'account.active'])
         Route::get('plan/{plan}', [PlanController::class, 'confirm'])->name('plans.confirm');
         Route::post('plan/{plan}/odeme', [PlanController::class, 'checkout'])->middleware('throttle:10,1')->name('plans.checkout');
 
+        Route::get('kazanclar', [EarningsController::class, 'index'])->name('earnings.index');
+        Route::get('kazanclar/csv', [EarningsController::class, 'export'])->middleware('throttle:10,1')->name('earnings.export');
+        Route::get('para-cekme', [WithdrawalController::class, 'index'])->name('withdrawals.index');
+        Route::post('para-cekme', [WithdrawalController::class, 'store'])->middleware('throttle:5,1')->name('withdrawals.store');
+        Route::get('hesap/fatura-bilgileri', [BillingProfileController::class, 'edit'])->name('finance.profile');
+        Route::put('hesap/fatura-bilgileri', [BillingProfileController::class, 'update'])->middleware('throttle:10,1')->name('finance.profile.update');
+        Route::get('hesap/odeme-bilgileri', [PayoutMethodController::class, 'edit'])->name('finance.payout');
+        Route::put('hesap/odeme-bilgileri', [PayoutMethodController::class, 'update'])->middleware('throttle:5,1')->name('finance.payout.update');
+        Route::get('hesap/vergi-formu', [TaxFormController::class, 'create'])->name('tax-form.create');
+        Route::post('hesap/vergi-formu', [TaxFormController::class, 'store'])->middleware('throttle:5,1')->name('tax-form.store');
+        Route::get('hesap/vergi-formu/{taxForm}/pdf', [TaxFormController::class, 'download'])->name('tax-form.download');
+
         Route::post('hesap/veri-talepleri', [PrivacyController::class, 'store'])->middleware('throttle:5,1')->name('privacy.store');
         Route::get('hesap/veri-talepleri/{dataRequest}/indir', [PrivacyController::class, 'download'])->middleware('signed')->name('privacy.download');
 
@@ -84,4 +102,5 @@ Route::prefix(AdminPanelProvider::path())
     ->name('admin.')
     ->group(function (): void {
         Route::get('indir/yayin/{release}', ReleaseArchiveController::class)->name('releases.archive');
+        Route::get('indir/vergi-formu/{taxForm}', TaxFormDownloadController::class)->name('tax-forms.download');
     });

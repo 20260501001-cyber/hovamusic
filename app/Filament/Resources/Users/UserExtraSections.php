@@ -10,16 +10,16 @@ use Filament\Schemas\Components\Component;
 class UserExtraSections
 {
     /**
-     * @var list<callable(): Component>
+     * @var array<string, callable(): Component>
      */
     private static array $sections = [];
 
     /**
      * @param  callable(): Component  $section
      */
-    public static function add(callable $section): void
+    public static function add(string $key, callable $section): void
     {
-        self::$sections[] = $section;
+        self::$sections[$key] = $section;
     }
 
     /**
@@ -27,6 +27,6 @@ class UserExtraSections
      */
     public static function sections(): array
     {
-        return array_map(fn (callable $section): Component => $section(), self::$sections);
+        return array_values(array_map(fn (callable $section): Component => $section(), self::$sections));
     }
 }

@@ -102,6 +102,34 @@ return [
         ],
     ],
 
+    'earnings' => [
+        'subject' => 'Hesabına :amount kazanç eklendi',
+        'line' => ':periods dönemine ait raporlar işlendi; hesabına :amount eklendi.',
+        'blocked' => 'Kazanç eklendiğinde aktif bir planın olmadığı için tutar bloke olarak yazıldı. Bir plan aldığında tamamı çekilebilir bakiyene geçer.',
+        'action' => 'Kazançlarımı görüntüle',
+    ],
+
+    'withdrawal' => [
+        'action' => 'Para çekme sayfasına git',
+        'reason_label' => 'Sebep',
+        'pending' => [
+            'subject' => ':amount para çekme talebin alındı',
+            'line' => ':amount tutarındaki para çekme talebin alındı. Tutar, talep sonuçlanana kadar rezerve bakiyende bekler.',
+        ],
+        'approved' => [
+            'subject' => ':amount para çekme talebin onaylandı',
+            'line' => ':amount tutarındaki talebin onaylandı; ödeme Wise ile gönderilecek.',
+        ],
+        'rejected' => [
+            'subject' => ':amount para çekme talebin reddedildi',
+            'line' => ':amount tutarındaki talebin reddedildi; tutar çekilebilir bakiyene geri eklendi.',
+        ],
+        'paid' => [
+            'subject' => ':amount ödemen gönderildi',
+            'line' => 'Talebin için Wise ile :paid gönderildi. Wise ücreti: :fee.',
+        ],
+    ],
+
     'privacy' => [
         'note_label' => 'Not',
         'export_ready' => [

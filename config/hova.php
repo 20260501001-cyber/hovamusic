@@ -36,11 +36,10 @@ return [
         'audio_max_mb' => 1024,
         // PPL'nin verdiği ilk beş karakter: ülke kodu + kayıt sahibi kodu.
         'isrc_registrant' => 'GXLM5',
-    ],
-
-    'plans' => [
-        // Faz 4'e kadar üretimde yayın gönderimi ve sanatçı ekleme kapalı kalır.
-        'enforce' => env('PLANS_ENFORCE', env('APP_ENV') === 'production'),
+        // Para çekme talebinde gösterilen tahmini Wise ücreti: sabit (USD) + yüzde.
+        // Gerçek ücret ödeme yapılınca admin tarafından girilir.
+        'wise_fee_fixed_usd' => '0',
+        'wise_fee_pct' => '0',
     ],
 
     'media' => [

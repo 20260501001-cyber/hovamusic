@@ -3,6 +3,7 @@
 namespace App\Support\Admin;
 
 use App\Models\Release;
+use App\Models\TaxForm;
 use Illuminate\Support\Facades\URL;
 
 /**
@@ -15,5 +16,10 @@ class AdminUrls
     public static function releaseArchive(Release $release): string
     {
         return URL::temporarySignedRoute('admin.releases.archive', now()->addMinutes(self::DOWNLOAD_TTL_MINUTES), ['release' => $release->ulid]);
+    }
+
+    public static function taxForm(TaxForm $form): string
+    {
+        return URL::temporarySignedRoute('admin.tax-forms.download', now()->addMinutes(self::DOWNLOAD_TTL_MINUTES), ['taxForm' => $form->ulid]);
     }
 }
