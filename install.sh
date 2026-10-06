@@ -466,6 +466,10 @@ section "MYSQL"
 systemctl enable mysql
 systemctl start mysql
 
+# MySQL binary logging açık olduğunda Laravel trigger'larının
+# SUPER yetkisi olmadan oluşturulabilmesini sağlar.
+mysql -e "SET GLOBAL log_bin_trust_function_creators = 1;"
+
 mysql <<SQL
 CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`
 CHARACTER SET utf8mb4
