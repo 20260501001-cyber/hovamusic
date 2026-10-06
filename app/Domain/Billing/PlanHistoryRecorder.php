@@ -5,6 +5,7 @@ namespace App\Domain\Billing;
 use App\Models\PlanHistory;
 use App\Models\Subscription;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 
 /**
@@ -17,7 +18,7 @@ class PlanHistoryRecorder
     /**
      * @return string|null Ne değişti: started, changed, ended ya da null
      */
-    public function sync(User $user, ?Carbon $at = null): ?string
+    public function sync(User $user, ?CarbonInterface $at = null): ?string
     {
         $at ??= now();
         $open = $user->planHistory()->whereNull('ends_at')->first();
@@ -58,7 +59,7 @@ class PlanHistoryRecorder
     /**
      * Plan, son aboneliğin bittiği anda kapanır (dönem sonu ya da iptal anı).
      */
-    private function endOf(User $user, Carbon $fallback): Carbon
+    private function endOf(User $user, CarbonInterface $fallback): CarbonInterface
     {
         /** @var Subscription|null $last */
         $last = $user->subscriptions()->getQuery()->reorder()->orderByDesc('current_period_end')->first();

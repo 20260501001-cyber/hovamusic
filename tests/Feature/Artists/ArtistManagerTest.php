@@ -8,6 +8,7 @@ use Livewire\Livewire;
 
 beforeEach(function () {
     $this->user = User::factory()->create();
+    activePlan($this->user, ['artist_limit' => null]);
     $this->actingAs($this->user);
 });
 
@@ -131,11 +132,28 @@ it('does not touch another account\'s profiles', function () {
     expect($foreign->fresh()->trashed())->toBeFalse();
 });
 
-it('routes the artist limit through the plan check', function () {
-    config(['hova.plans.enforce' => true]);
+it('sends a user without a plan to the plans page', function () {
+    $this->actingAs(User::factory()->create());
 
     Livewire::test(ArtistManager::class)
         ->call('create')
         ->assertSet('editing', null)
-        ->assertSet('listError', 'Bu işlem planlar devreye girdiğinde açılacak.');
+        ->assertRedirect(route('panel.plans.index'));
+
+    expect(session('flash'))->toBe(__('plans.gate.no_plan_artist'));
+});
+
+it('stops at the artist limit of the plan', function () {
+    $user = User::factory()->create();
+    activePlan($user, ['artist_limit' => 1]);
+    Artist::factory()->for($user)->create();
+    $this->actingAs($user);
+
+    Livewire::test(ArtistManager::class)
+        ->call('create')
+        ->assertSet('editing', null)
+        ->assertRedirect(route('panel.plans.index'));
+
+    expect(session('flash'))->toBe(__('plans.gate.artist_limit', ['limit' => 1]))
+        ->and($user->artists()->count())->toBe(1);
 });

@@ -3,6 +3,7 @@
 namespace App\Domain\Finance;
 
 use App\Models\PlanHistory;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 
 /**
@@ -17,7 +18,7 @@ class ShareResolver
      */
     private array $cache = [];
 
-    public function shareFor(int $userId, Carbon $salesMonth): ?string
+    public function shareFor(int $userId, CarbonInterface $salesMonth): ?string
     {
         $key = $userId.':'.$salesMonth->format('Y-m');
 

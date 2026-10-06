@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Horizon\Horizon;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -80,6 +81,9 @@ class AppServiceProvider extends ServiceProvider
 
             return $this->app->isProduction() ? $rule->uncompromised() : $rule;
         });
+
+        // Kuyruk izleme ekranı (Horizon) yalnızca Süper Admin'e açık.
+        Horizon::auth(fn (Request $request): bool => (bool) ($request->user('admin')?->isSuperAdmin()));
 
         Event::listen(Login::class, function (Login $event): void {
             // Admin kullanıcı olarak görüntülemeye başladığında kullanıcının son giriş bilgisi değişmez.

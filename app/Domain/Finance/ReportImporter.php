@@ -31,6 +31,7 @@ class ReportImporter
      */
     public function upload(string $path, string $originalName, ReportMapping $mapping, ?string $currency, Admin $admin): ReportImport
     {
+        $this->assertReadableFile($path, $originalName);
         $hash = hash_file('sha256', $path);
 
         // Geri alınmış rapor (ör. yanlış eşleştirmeyle işlenmiş) düzeltilip yeniden yüklenebilir.
@@ -58,6 +59,33 @@ class ReportImporter
         ProcessReportImport::dispatch($import->id)->onQueue('imports');
 
         return $import;
+    }
+
+    /**
+     * Uzantıya güvenilmez: XLSX bir ZIP arşividir ("PK" imzası), CSV ise ikili veri
+     * (NUL bayt) içermeyen metindir.
+     *
+     * @throws ReportUnreadable
+     */
+    private function assertReadableFile(string $path, string $originalName): void
+    {
+        $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+        $handle = fopen($path, 'rb');
+        $head = $handle ? (string) fread($handle, 8192) : '';
+
+        if ($handle) {
+            fclose($handle);
+        }
+
+        $valid = match ($extension) {
+            'xlsx' => str_starts_with($head, "PK\x03\x04"),
+            'csv', 'txt' => $head !== '' && ! str_contains($head, "\0"),
+            default => false,
+        };
+
+        if (! $valid) {
+            throw new ReportUnreadable(__('finance.import.errors.unreadable', ['message' => $originalName]));
+        }
     }
 
     /**

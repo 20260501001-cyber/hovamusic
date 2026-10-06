@@ -9,7 +9,7 @@
 
 @php
     $id ??= 'c-'.str_replace(['.', '[', ']'], '-', $name);
-    $error = $errors->getBag($bag)->first(rtrim(str_replace(['[', ']'], ['.', ''], $name), '.'));
+    $error = ($errors ?? new \Illuminate\Support\ViewErrorBag)->getBag($bag)->first(rtrim(str_replace(['[', ']'], ['.', ''], $name), '.'));
     $isChecked = old(rtrim(str_replace(['[', ']'], ['.', ''], $name), '.'), $checked);
 @endphp
 

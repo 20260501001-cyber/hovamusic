@@ -6,6 +6,7 @@ use App\Http\Middleware\GuardAuthForms;
 use App\Http\Middleware\HandleRedirects;
 use App\Http\Middleware\RestrictAdminIp;
 use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\ThrottleFormSubmissions;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -19,7 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(HandleRedirects::class);
-        $middleware->web(append: [SecurityHeaders::class, EnsureAccountIsActive::class, BlockWhileImpersonating::class]);
+        $middleware->web(append: [SecurityHeaders::class, ThrottleFormSubmissions::class, EnsureAccountIsActive::class, BlockWhileImpersonating::class]);
 
         $middleware->alias([
             'auth.forms' => GuardAuthForms::class,

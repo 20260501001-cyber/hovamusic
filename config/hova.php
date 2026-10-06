@@ -57,6 +57,15 @@ return [
         'ffprobe' => env('FFPROBE_PATH', 'ffprobe'),
     ],
 
+    // Gece yedeği: veritabanı dökümü, kapaklar ve vergi formları (ses dosyaları hariç).
+    'backup' => [
+        'path' => env('BACKUP_PATH', '/var/hovamusic/backups'),
+        'keep_daily' => (int) env('BACKUP_KEEP_DAILY', 7),
+        'keep_weekly' => (int) env('BACKUP_KEEP_WEEKLY', 4),
+        'mysqldump' => env('BACKUP_MYSQLDUMP', 'mysqldump'),
+        'directories' => ['covers', 'tax-forms'],
+    ],
+
     'default_label' => 'Hova Music',
 
     // Veritabanı UTC tutar; kullanıcıya gösterilen saatler bu dilimdedir.

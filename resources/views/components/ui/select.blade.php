@@ -10,7 +10,7 @@
 
 @php
     $id ??= 's-'.$name;
-    $error = $errors->getBag($bag)->first($name);
+    $error = ($errors ?? new \Illuminate\Support\ViewErrorBag)->getBag($bag)->first($name);
     $current = (string) old($name, $selected);
 @endphp
 

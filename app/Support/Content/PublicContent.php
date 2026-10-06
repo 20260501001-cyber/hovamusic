@@ -11,7 +11,8 @@ use App\Models\PostCategory;
 use Illuminate\Support\Collection;
 
 /**
- * Herkese açık sayfaların önbellekli verileri.
+ * Herkese açık sayfaların verileri. Önbellek yalnızca düz diziler tutar (cache
+ * nesne serileştirmeye kapalı); model sorguları küçük ve indeksli.
  */
 class PublicContent
 {
@@ -22,12 +23,12 @@ class PublicContent
      */
     public function plans(): array
     {
-        $plans = ContentCache::remember('plans', fn () => Plan::query()
+        $plans = Plan::query()
             ->where('is_active', true)
             ->whereNotNull('polar_product_id')
             ->orderBy('sort')
             ->orderBy('price_usd')
-            ->get());
+            ->get();
 
         return [
             AccountType::Artist->value => $plans->where('audience', AccountType::Artist)->values(),
@@ -40,11 +41,12 @@ class PublicContent
      */
     public function platformNames(): Collection
     {
-        return ContentCache::remember('platforms', fn () => Platform::query()
+        return collect(ContentCache::remember('platforms', fn (): array => Platform::query()
             ->where('is_active', true)
             ->orderBy('sort')
             ->orderBy('name')
-            ->pluck('name'));
+            ->pluck('name')
+            ->all()));
     }
 
     /**
@@ -52,13 +54,13 @@ class PublicContent
      */
     public function faqs(bool $homeOnly = false): Collection
     {
-        return ContentCache::remember('faqs:'.($homeOnly ? 'home' : 'all'), fn () => Faq::query()
+        return Faq::query()
             ->where('locale', 'tr')
             ->where('is_published', true)
             ->when($homeOnly, fn ($query) => $query->where('show_on_home', true))
             ->orderBy('sort')
             ->orderBy('id')
-            ->get());
+            ->get();
     }
 
     /**
@@ -68,11 +70,11 @@ class PublicContent
      */
     public function categories(): Collection
     {
-        return ContentCache::remember('post-categories', fn () => PostCategory::query()
+        return PostCategory::query()
             ->whereHas('posts', fn ($query) => $query->published()->where('locale', 'tr'))
             ->orderBy('sort')
             ->orderBy('name')
-            ->get());
+            ->get();
     }
 
     /**
@@ -80,12 +82,12 @@ class PublicContent
      */
     public function latestPosts(int $limit = 3): Collection
     {
-        return ContentCache::remember('posts:latest:'.$limit, fn () => Post::query()
+        return Post::query()
             ->published()
             ->where('locale', 'tr')
             ->with('category:id,name,slug')
             ->latest('published_at')
             ->limit($limit)
-            ->get());
+            ->get();
     }
 }

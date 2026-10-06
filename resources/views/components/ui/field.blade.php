@@ -15,7 +15,7 @@
 
 @php
     $id ??= 'f-'.str_replace(['.', '[', ']'], '-', $name);
-    $error = $errors->getBag($bag)->first($name);
+    $error = ($errors ?? new \Illuminate\Support\ViewErrorBag)->getBag($bag)->first($name);
     $describedBy = collect([$help ? $id.'-help' : null, $error ? $id.'-error' : null])->filter()->implode(' ') ?: null;
     $inputClasses = collect(['hm-input', $mono ? 'hm-input--mono' : null, $multiline ? 'hm-input--area' : null, $error ? 'is-invalid' : null])->filter()->implode(' ');
     $current = $type === 'password' ? null : old($name, $value);

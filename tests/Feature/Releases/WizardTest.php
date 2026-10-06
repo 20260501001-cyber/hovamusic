@@ -24,6 +24,7 @@ use Livewire\Livewire;
 beforeEach(function () {
     Storage::fake('private');
     $this->user = User::factory()->create();
+    activePlan($this->user);
     $this->actingAs($this->user);
 });
 
@@ -183,6 +184,18 @@ describe('cover step', function () {
         }, 'sahte.jpg', 'Dosya JPG ya da PNG değil; kapak JPG veya PNG olmalı.'],
     ]);
 
+    it('does not accept a cover without an active plan', function () {
+        $user = User::factory()->create();
+        $release = Release::factory()->for($user)->create();
+        $this->actingAs($user);
+
+        Livewire::test(CoverStep::class, ['release' => $release])
+            ->set('upload', UploadedFile::fake()->createWithContent('kapak.jpg', file_get_contents(makeJpeg())))
+            ->assertSet('coverErrors', [__('plans.gate.no_plan_upload')]);
+
+        expect($release->fresh()->cover_media_id)->toBeNull();
+    });
+
     it('measures the size limit from the admin setting', function () {
         app(Settings::class)->put(['cover_max_mb' => 1]);
         $release = Release::factory()->for($this->user)->create();
@@ -318,7 +331,7 @@ describe('review step', function () {
     });
 
     it('requires the three declarations before submitting', function () {
-        $release = Release::factory()->complete()->create(['wizard_step' => 5]);
+        $release = planned(Release::factory()->complete()->create(['wizard_step' => 5]));
         $this->actingAs($release->user);
 
         Livewire::test(ReviewStep::class, ['release' => $release])
@@ -331,7 +344,7 @@ describe('review step', function () {
     });
 
     it('submits the release for review', function () {
-        $release = Release::factory()->complete()->create(['wizard_step' => 5]);
+        $release = planned(Release::factory()->complete()->create(['wizard_step' => 5]));
         $this->actingAs($release->user);
 
         Livewire::test(ReviewStep::class, ['release' => $release])

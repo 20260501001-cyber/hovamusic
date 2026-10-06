@@ -24,7 +24,7 @@ beforeEach(function () {
 });
 
 it('assigns Hova Music ISRCs in order when a release without codes is submitted', function () {
-    $release = Release::factory()->complete(tracks: 2)->create(['type' => 'single']);
+    $release = planned(Release::factory()->complete(tracks: 2)->create(['type' => 'single']));
 
     app(ReleaseSubmission::class)->submit($release, $release->user, acceptedDeclarations());
 
@@ -35,14 +35,14 @@ it('assigns Hova Music ISRCs in order when a release without codes is submitted'
         ->and(IsrcCode::query()->orderBy('sequence')->pluck('track_id')->all())->toBe($tracks->pluck('id')->all())
         ->and(IsrcCode::query()->first()->assigned_by_type)->toBe('system');
 
-    $next = Release::factory()->complete()->create();
+    $next = planned(Release::factory()->complete()->create());
     app(ReleaseSubmission::class)->submit($next, $next->user, acceptedDeclarations());
 
     expect($next->tracks()->sole()->isrc)->toBe('GXLM52600003');
 });
 
 it('keeps the user\'s own ISRC and does not assign one', function () {
-    $release = Release::factory()->complete()->create();
+    $release = planned(Release::factory()->complete()->create());
     $release->tracks()->update(['isrc' => 'TRA1B2600001', 'has_own_isrc' => true, 'isrc_source' => 'user']);
 
     app(ReleaseSubmission::class)->submit($release, $release->user, acceptedDeclarations());
@@ -52,7 +52,7 @@ it('keeps the user\'s own ISRC and does not assign one', function () {
 });
 
 it('never hands out a code again, even after the track is deleted', function () {
-    $release = Release::factory()->complete()->create();
+    $release = planned(Release::factory()->complete()->create());
     $allocator = app(IsrcAllocator::class);
     $track = $release->tracks()->sole();
 
@@ -66,7 +66,7 @@ it('never hands out a code again, even after the track is deleted', function () 
 });
 
 it('starts a new sequence each year', function () {
-    $release = Release::factory()->complete()->create();
+    $release = planned(Release::factory()->complete()->create());
     $allocator = app(IsrcAllocator::class);
     $allocator->assign($release->tracks()->sole(), $release->user);
 
@@ -79,7 +79,7 @@ it('starts a new sequence each year', function () {
 
 it('uses the prefix set in the admin settings', function () {
     app(Settings::class)->put(['isrc_registrant' => 'gxab1']);
-    $release = Release::factory()->complete()->create();
+    $release = planned(Release::factory()->complete()->create());
 
     expect(app(IsrcAllocator::class)->assign($release->tracks()->sole(), $release->user))->toBe('GXAB12600001');
 });
@@ -124,7 +124,7 @@ it('lets the user switch between "I have a code" and "assign one for me"', funct
 
 it('registers a Hova Music code an admin enters by hand and refuses to reuse it', function () {
     $admin = Admin::factory()->withRole(AdminRole::ReviewEditor)->create();
-    $release = Release::factory()->complete()->create();
+    $release = planned(Release::factory()->complete()->create());
     $first = $release->tracks()->sole();
     $second = Track::factory()->for($release)->create(['position' => 2]);
     $allocator = app(IsrcAllocator::class);

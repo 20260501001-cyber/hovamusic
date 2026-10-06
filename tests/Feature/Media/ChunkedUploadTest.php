@@ -19,6 +19,7 @@ beforeEach(function () {
     fakeAudioProbe();
     $this->release = Release::factory()->create();
     $this->track = Track::factory()->for($this->release)->create();
+    activePlan($this->release->user);
     $this->actingAs($this->release->user);
 });
 
@@ -176,4 +177,16 @@ it('cleans up uploads that were left unfinished', function () {
 
     expect($session->fresh()->status)->toBe(UploadStatus::Expired);
     Storage::disk('private')->assertMissing($session->temp_path);
+});
+
+it('requires an active plan to start an upload', function () {
+    $release = Release::factory()->create();
+    $track = Track::factory()->for($release)->create();
+    $this->actingAs($release->user);
+
+    startUpload(['track' => $track->ulid])
+        ->assertStatus(422)
+        ->assertJson(['message' => __('plans.gate.no_plan_upload'), 'plans_url' => route('panel.plans.index')]);
+
+    expect(UploadSession::query()->count())->toBe(0);
 });

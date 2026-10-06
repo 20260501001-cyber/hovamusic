@@ -16,7 +16,7 @@ function declarations(bool $accepted = true): array
 }
 
 it('submits a complete release for review and stores the declarations', function () {
-    $release = Release::factory()->complete()->create();
+    $release = planned(Release::factory()->complete()->create());
 
     app(ReleaseSubmission::class)->submit($release, $release->user, declarations());
 
@@ -29,7 +29,7 @@ it('submits a complete release for review and stores the declarations', function
 });
 
 it('refuses to submit without all three declarations', function () {
-    $release = Release::factory()->complete()->create();
+    $release = planned(Release::factory()->complete()->create());
     $partial = declarations();
     $partial['hak-beyani-icerik'] = false;
 
@@ -41,7 +41,7 @@ it('refuses to submit without all three declarations', function () {
 });
 
 it('refuses to submit an incomplete release', function () {
-    $release = Release::factory()->create();
+    $release = planned(Release::factory()->create());
 
     try {
         app(ReleaseSubmission::class)->submit($release, $release->user, declarations());
@@ -51,20 +51,49 @@ it('refuses to submit an incomplete release', function () {
     }
 });
 
-it('keeps the plan check in one place and blocks submission when plans are enforced', function () {
-    config(['hova.plans.enforce' => true]);
+it('blocks submission without an active plan', function () {
     $release = Release::factory()->complete()->create();
 
     try {
         app(ReleaseSubmission::class)->submit($release, $release->user, declarations());
         $this->fail('Plan kontrolü gönderimi engellemeliydi.');
     } catch (SubmissionFailed $failed) {
-        expect($failed->errors)->toHaveKey('plan');
+        expect($failed->errors)->toBe(['plan' => [__('plans.gate.no_plan_submit')]]);
     }
+
+    expect($release->fresh()->status)->toBe(ReleaseStatus::Draft);
+});
+
+it('counts each first submission against the release limit, rejected ones included', function () {
+    $first = planned(Release::factory()->complete()->create(), ['release_limit' => 2]);
+    $user = $first->user;
+    $admin = Admin::factory()->withRole(AdminRole::ReviewEditor)->create();
+
+    app(ReleaseSubmission::class)->submit($first, $user, declarations());
+    app(ReleaseWorkflow::class)->transition($first->fresh(), ReleaseStatus::Rejected, $admin, 'Telif sorunu.');
+
+    $second = Release::factory()->for($user)->complete()->create();
+    app(ReleaseSubmission::class)->submit($second, $user, declarations());
+
+    $third = Release::factory()->for($user)->complete()->create();
+
+    expect(fn () => app(ReleaseSubmission::class)->submit($third, $user, declarations()))->toThrow(SubmissionFailed::class)
+        ->and($third->fresh()->status)->toBe(ReleaseStatus::Draft);
+});
+
+it('does not count a resubmission after requested changes again', function () {
+    $release = planned(Release::factory()->complete()->create(), ['release_limit' => 1]);
+    $admin = Admin::factory()->withRole(AdminRole::ReviewEditor)->create();
+
+    app(ReleaseSubmission::class)->submit($release, $release->user, declarations());
+    app(ReleaseWorkflow::class)->transition($release->fresh(), ReleaseStatus::NeedsChanges, $admin, 'Kapakta link var.');
+    app(ReleaseSubmission::class)->submit($release->fresh(), $release->user, declarations());
+
+    expect($release->fresh()->status)->toBe(ReleaseStatus::InReview);
 });
 
 it('lets the owner resubmit a release that needs changes, and locks it once approved', function () {
-    $release = Release::factory()->complete()->create();
+    $release = planned(Release::factory()->complete()->create());
     $admin = Admin::factory()->withRole(AdminRole::ReviewEditor)->create();
     $workflow = app(ReleaseWorkflow::class);
 
@@ -85,7 +114,7 @@ it('lets the owner resubmit a release that needs changes, and locks it once appr
 });
 
 it('does not let a user approve their own release', function () {
-    $release = Release::factory()->complete()->create();
+    $release = planned(Release::factory()->complete()->create());
     app(ReleaseSubmission::class)->submit($release, $release->user, declarations());
 
     expect(fn () => app(ReleaseWorkflow::class)->transition($release->fresh(), ReleaseStatus::Approved, $release->user))
