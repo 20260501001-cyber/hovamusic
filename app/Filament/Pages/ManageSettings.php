@@ -17,7 +17,7 @@ use Filament\Schemas\Schema;
 use UnitEnum;
 
 /**
- * Yayın sihirbazının kullandığı, admin'in değiştirebildiği değerler.
+ * Yayın sihirbazının ve sitenin kullandığı, admin'in değiştirebildiği değerler.
  *
  * @property-read Schema $form
  */
@@ -54,6 +54,8 @@ class ManageSettings extends Page
             'cover_max_mb' => $settings->int('cover_max_mb'),
             'audio_max_mb' => $settings->int('audio_max_mb'),
             'isrc_registrant' => (string) $settings->get('isrc_registrant'),
+            'google_site_verification' => (string) $settings->get('google_site_verification'),
+            'contact_email' => (string) $settings->get('contact_email'),
         ]);
     }
 
@@ -91,6 +93,16 @@ class ManageSettings extends Page
                     ->length(5)
                     ->regex('/^[A-Za-z]{2}[A-Za-z0-9]{3}$/')
                     ->required(),
+                TextInput::make('google_site_verification')
+                    ->label('Google Search Console doğrulama kodu')
+                    ->helperText('HTML etiketi yönteminde content="..." içindeki değer. Tüm sayfalara meta etiketi olarak eklenir.')
+                    ->maxLength(120)
+                    ->regex('/^[A-Za-z0-9_\-]*$/'),
+                TextInput::make('contact_email')
+                    ->label('İletişim formu e-postası')
+                    ->helperText('İletişim formundan gelen mesajlar bu adrese gider ve İletişim sayfasında gösterilir. Boşsa gönderen adresi kullanılır.')
+                    ->email()
+                    ->maxLength(191),
             ]);
     }
 
@@ -116,12 +128,16 @@ class ManageSettings extends Page
             'cover_max_mb' => (int) $state['cover_max_mb'],
             'audio_max_mb' => (int) $state['audio_max_mb'],
             'isrc_registrant' => strtoupper(trim((string) $state['isrc_registrant'])),
+            'google_site_verification' => trim((string) ($state['google_site_verification'] ?? '')),
+            'contact_email' => trim((string) ($state['contact_email'] ?? '')),
         ];
         $before = [
             'release_min_lead_days' => $settings->releaseLeadDays(),
             'cover_max_mb' => $settings->int('cover_max_mb'),
             'audio_max_mb' => $settings->int('audio_max_mb'),
             'isrc_registrant' => (string) $settings->get('isrc_registrant'),
+            'google_site_verification' => (string) $settings->get('google_site_verification'),
+            'contact_email' => (string) $settings->get('contact_email'),
         ];
 
         $settings->put($data);

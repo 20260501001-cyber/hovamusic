@@ -40,6 +40,17 @@ return [
         // Gerçek ücret ödeme yapılınca admin tarafından girilir.
         'wise_fee_fixed_usd' => '0',
         'wise_fee_pct' => '0',
+        // Google Search Console doğrulama kodu (meta etiketi içeriği).
+        'google_site_verification' => '',
+        // İletişim formu mesajlarının gönderileceği adres; boşsa MAIL_FROM_ADDRESS.
+        'contact_email' => '',
+    ],
+
+    // Site dilleri. İngilizce açıldığında içerik /en altında yayınlanır ve
+    // sayfalara hreflang karşılıkları eklenir.
+    'locales' => [
+        'tr' => ['enabled' => true, 'hreflang' => 'tr', 'prefix' => ''],
+        'en' => ['enabled' => false, 'hreflang' => 'en', 'prefix' => 'en'],
     ],
 
     'media' => [

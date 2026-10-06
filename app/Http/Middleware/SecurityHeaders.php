@@ -28,6 +28,11 @@ class SecurityHeaders
             $headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
         }
 
+        // Panel, admin ve giriş sayfaları arama sonuçlarına girmez.
+        if ($this->isApplicationArea($request) || $this->isAuthPage($request)) {
+            $headers['X-Robots-Tag'] = 'noindex, nofollow';
+        }
+
         if (! $response->headers->has('Content-Security-Policy')) {
             $headers['Content-Security-Policy'] = $this->contentSecurityPolicy($request, (string) Vite::cspNonce());
         }
@@ -87,6 +92,14 @@ class SecurityHeaders
         return collect($directives)
             ->map(fn (array $sources, string $directive): string => trim($directive.' '.implode(' ', $sources)))
             ->implode('; ');
+    }
+
+    private function isAuthPage(Request $request): bool
+    {
+        return $request->is(
+            'giris', 'kayit', 'cikis', 'sifremi-unuttum', 'sifre-yenile', 'sifre-yenile/*', 'sifre-onayla', 'sifre-onayla/*',
+            'e-posta-dogrulama', 'e-posta-dogrulama/*', 'iki-adimli-dogrulama', 'goruntuleme/*', 'medya/*',
+        );
     }
 
     private function isApplicationArea(Request $request): bool

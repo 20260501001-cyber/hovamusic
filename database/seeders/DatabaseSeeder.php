@@ -8,7 +8,7 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call([RoleSeeder::class, PlatformSeeder::class]);
+        $this->call([RoleSeeder::class, PlatformSeeder::class, FaqSeeder::class]);
 
         if (app()->environment('local')) {
             $this->call([GenreSeeder::class, DemoSeeder::class]);

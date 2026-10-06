@@ -1,4 +1,4 @@
-<x-layouts.public :title="$document->title">
+<x-layouts.public :seo="$seo">
     <article class="hm-container grid gap-6 py-12" style="max-width: calc(var(--text-max) + 64px)">
         <p class="hm-eyebrow">{{ __('site.legal.eyebrow') }}</p>
         <h1 class="hm-display-l m-0">{{ $document->title }}</h1>

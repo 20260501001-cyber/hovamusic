@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ReleaseArchiveController;
 use App\Http\Controllers\Admin\TaxFormDownloadController;
 use App\Http\Controllers\CookieConsentController;
+use App\Http\Controllers\Dev\DevLoginController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\LegalPageController;
@@ -22,12 +23,32 @@ use App\Http\Controllers\Panel\ReleaseRequestController;
 use App\Http\Controllers\Panel\TaxFormController;
 use App\Http\Controllers\Panel\UploadController;
 use App\Http\Controllers\Panel\WithdrawalController;
+use App\Http\Controllers\Site\BlogController;
+use App\Http\Controllers\Site\ContactController;
+use App\Http\Controllers\Site\FaqController;
+use App\Http\Controllers\Site\PageController;
+use App\Http\Controllers\Site\PlatformsController;
+use App\Http\Controllers\Site\PricingController;
+use App\Http\Controllers\Site\RobotsController;
+use App\Http\Controllers\Site\SitemapController;
 use App\Http\Controllers\Webhooks\PolarWebhookController;
 use App\Http\Middleware\RestrictAdminIp;
 use App\Providers\Filament\AdminPanelProvider;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
+Route::get('fiyatlar', PricingController::class)->name('pricing');
+Route::get('nasil-calisir', [PageController::class, 'how'])->name('how');
+Route::get('platformlar', PlatformsController::class)->name('platforms');
+Route::get('sss', FaqController::class)->name('faq');
+Route::get('blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('blog/kategori/{category:slug}', [BlogController::class, 'category'])->name('blog.category');
+Route::get('blog/{slug}', [BlogController::class, 'show'])->where('slug', '[a-z0-9\-]+')->name('blog.show');
+Route::get('hakkimizda', [PageController::class, 'about'])->name('about');
+Route::get('iletisim', [ContactController::class, 'show'])->name('contact');
+Route::post('iletisim', [ContactController::class, 'store'])->middleware('throttle:5,10')->name('contact.store');
+Route::get('sitemap.xml', SitemapController::class)->name('sitemap');
+Route::get('robots.txt', RobotsController::class)->name('robots');
 
 // Ödeme sağlayıcısı webhook'u: oturum ve CSRF yok; imza denetimi denetleyicide.
 Route::post('webhooks/polar', PolarWebhookController::class)
@@ -90,6 +111,12 @@ Route::middleware(['auth', 'verified', 'account.active'])
     });
 
 Route::post('goruntuleme/bitir', ImpersonationController::class)->name('impersonation.end');
+
+// Yalnızca local: ekran görüntüsü komutunun demo oturumu (imzalı adres).
+if (app()->environment('local')) {
+    Route::get('_yerel/giris/{user}', DevLoginController::class)->middleware('signed')->name('dev.login');
+    Route::view('_yerel/og', 'dev.og')->name('dev.og');
+}
 
 // Özel diskteki dosyalar: imzalı ve süreli adres, sahibi ya da inceleme yapan admin.
 Route::get('medya/{media}', MediaController::class)

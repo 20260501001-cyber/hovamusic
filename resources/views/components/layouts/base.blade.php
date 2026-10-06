@@ -3,6 +3,7 @@
     'description' => null,
     'noindex' => false,
     'theme' => 'dark',
+    'seo' => null,
 ])
 
 <!DOCTYPE html>
@@ -11,11 +12,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ? $title.' · Hova Music' : 'Hova Music' }}</title>
-    @if ($description)<meta name="description" content="{{ $description }}">@endif
-    @if ($noindex)<meta name="robots" content="noindex, nofollow">@endif
+    @if ($seo)
+        <x-seo :seo="$seo" />
+    @else
+        <title>{{ $title ? $title.' · Hova Music' : 'Hova Music' }}</title>
+        @if ($description)<meta name="description" content="{{ $description }}">@endif
+        @if ($noindex)<meta name="robots" content="noindex, nofollow">@endif
+    @endif
     <meta name="theme-color" content="#0A0A0C">
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="32x32">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
 </head>

@@ -84,5 +84,7 @@ class DemoSeeder extends Seeder
 
             app(PlanHistoryRecorder::class)->sync($user);
         }
+
+        $this->call([FaqSeeder::class, DemoContentSeeder::class]);
     }
 }

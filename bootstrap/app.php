@@ -3,6 +3,7 @@
 use App\Http\Middleware\BlockWhileImpersonating;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\GuardAuthForms;
+use App\Http\Middleware\HandleRedirects;
 use App\Http\Middleware\RestrictAdminIp;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
@@ -17,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->append(HandleRedirects::class);
         $middleware->web(append: [SecurityHeaders::class, EnsureAccountIsActive::class, BlockWhileImpersonating::class]);
 
         $middleware->alias([
@@ -39,5 +41,5 @@ return Application::configure(basePath: dirname(__DIR__))
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
 
-        $exceptions->dontFlash(['current_password', 'password', 'password_confirmation', 'iban', 'tax_id']);
+        $exceptions->dontFlash(['current_password', 'password', 'password_confirmation', 'iban', 'account_number', 'routing_number', 'tax_id']);
     })->create();

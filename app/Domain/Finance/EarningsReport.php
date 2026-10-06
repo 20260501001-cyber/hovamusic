@@ -64,6 +64,12 @@ class EarningsReport
         $end = $to !== null ? CarbonImmutable::createFromFormat('!Y-m', $to) : $latest;
         $start = $from !== null ? CarbonImmutable::createFromFormat('!Y-m', $from) : $end->subMonths(self::DEFAULT_MONTHS - 1);
 
+        // Varsayılan aralık, verisi olan ilk aydan önceye uzanmaz.
+        if ($from === null && $months !== []) {
+            $first = CarbonImmutable::createFromFormat('!Y-m', $months[0]);
+            $start = $start->lessThan($first) && $first->lessThanOrEqualTo($end) ? $first : $start;
+        }
+
         if ($start->greaterThan($end)) {
             [$start, $end] = [$end, $start];
         }

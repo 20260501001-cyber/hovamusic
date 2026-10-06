@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\AccountType;
 use App\Enums\PlanInterval;
 use App\Models\Concerns\Auditable;
+use App\Models\Concerns\FlushesContentCache;
 use App\Models\Concerns\HasPublicUlid;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -22,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Plan extends Model
 {
     use Auditable, HasPublicUlid;
+    use FlushesContentCache;
 
     protected $attributes = [
         'is_active' => true,
