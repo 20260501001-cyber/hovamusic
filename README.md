@@ -117,23 +117,20 @@ Cron'a tek satır yeterlidir (aşağıda).
 
 ### Otomatik kurulum
 
-`install.sh` boş bir Ubuntu 24.04 sunucuya her şeyi kurar ve sorular sorarak `.env` dosyasını doldurur: paketler, güvenlik duvarı, `deploy` kullanıcısı, MySQL, Redis, GitHub deploy anahtarı, kod, derleme, Nginx, Let's Encrypt SSL, Horizon, cron, ilk yönetici hesabı.
+`install.sh` boş bir Ubuntu 24.04 sunucuya her şeyi kurar ve sorular sorarak `.env` dosyasını doldurur: paketler, güvenlik duvarı, `deploy` kullanıcısı, MySQL, Redis, kod, derleme, Nginx, Let's Encrypt SSL, Horizon, cron, ilk yönetici hesabı.
 
 1. Alan adının (ve istersen `www`) DNS A kaydını sunucunun IP'sine yönlendir.
-2. Depo özel olduğu için betiği kendi bilgisayarından sunucuya kopyala:
-
-   ```sh
-   scp install.sh root@SUNUCU_IP:/root/
-   ```
-
-3. Sunucuda çalıştır ve soruları yanıtla:
+2. Sunucuya bağlan, betiği indir ve çalıştır:
 
    ```sh
    ssh root@SUNUCU_IP
-   bash /root/install.sh
+   curl -fsSL https://raw.githubusercontent.com/20260501001-cyber/hovamusic/main/install.sh -o install.sh
+   bash install.sh
    ```
 
-   Betik bir GitHub deploy anahtarı üretir, ekrana yazar ve depoya ekleyene kadar bekler (GitHub > Settings > Deploy keys; yazma izni verme).
+   Depo özelse bu indirme çalışmaz; betiği kendi bilgisayarından kopyala: `scp install.sh root@SUNUCU_IP:/root/`.
+
+Depo herkese açıksa kod anahtarsız indirilir. Depo özelse betik bir GitHub deploy anahtarı üretir, ekrana yazar ve depoya ekleyene kadar bekler (GitHub > depo > Settings > Deploy keys; yazma izni verme). Depo sonradan özel yapılırsa `sudo bash /var/www/hovamusic/install.sh` ile yeniden çalıştırmak anahtar adımını tamamlar.
 
 Betik tekrar çalıştırılabilir: mevcut şifreler ve `APP_KEY` korunur. DNS geç yayıldığı için SSL alınamadıysa ya da sonradan bir servis anahtarı eklediysen yeniden çalıştırman yeterli. Çıktı `/var/log/hovamusic-kurulum.log` dosyasına, kurulum özeti (adresler, admin yolu, yapılacaklar) `/root/hovamusic-kurulum.txt` dosyasına yazılır.
 
@@ -154,7 +151,7 @@ mkdir -p /home/deploy/.ssh && cp ~/.ssh/authorized_keys /home/deploy/.ssh/ && ch
 ufw allow OpenSSH && ufw allow 'Nginx Full' && ufw enable
 ```
 
-Depo özel olduğu için sunucuya salt okunur bir GitHub deploy anahtarı ekle (`deploy` kullanıcısıyla):
+Depo özelse sunucuya salt okunur bir GitHub deploy anahtarı ekle (`deploy` kullanıcısıyla); depo herkese açıksa bu adımı atla ve aşağıda HTTPS adresiyle klonla:
 
 ```sh
 ssh-keygen -t ed25519 -C "hovamusic-sunucu" -f ~/.ssh/id_ed25519 -N ""
@@ -199,7 +196,7 @@ sudo chown -R deploy:www-data /var/www/hovamusic /var/hovamusic
 sudo chmod 750 /var/hovamusic/private /var/hovamusic/backups
 
 cd /var/www/hovamusic
-git clone git@github.com:<hesap>/hovamusic.git .
+git clone https://github.com/20260501001-cyber/hovamusic.git .   # özel depoda: git@github.com:20260501001-cyber/hovamusic.git
 composer install --no-dev --optimize-autoloader --no-interaction
 npm ci && npm run build
 cp .env.example .env   # alanları yukarıdaki tabloya göre doldur

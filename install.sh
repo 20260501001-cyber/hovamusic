@@ -22,7 +22,12 @@ if [[ -z ${HM_SELF_COPY:-} && -f ${BASH_SOURCE[0]:-} ]]; then
     cp "${BASH_SOURCE[0]}" "$tmp_copy"
     HM_SELF_COPY=1 exec bash "$tmp_copy" "$@"
 fi
-[[ -n ${HM_SELF_COPY:-} ]] && rm -f -- "${BASH_SOURCE[0]}"
+if [[ -z ${HM_SELF_COPY:-} ]]; then
+    echo 'Betiği önce dosyaya indirip öyle çalıştır (curl ... | bash desteklenmez):' >&2
+    echo '  curl -fsSL https://raw.githubusercontent.com/20260501001-cyber/hovamusic/main/install.sh -o install.sh && sudo bash install.sh' >&2
+    exit 1
+fi
+rm -f -- "${BASH_SOURCE[0]}"
 cd /
 
 # ---------------------------------------------------------------------------
@@ -40,7 +45,7 @@ readonly PHP_V=8.4
 readonly NODE_MAJOR=22
 readonly DB_NAME=hovamusic
 readonly DB_USER=hovamusic
-readonly REPO_DEFAULT=git@github.com:20260501001-cyber/hovamusic.git
+readonly REPO_DEFAULT=20260501001-cyber/hovamusic
 readonly BRANCH_DEFAULT=main
 readonly LOG_FILE=/var/log/hovamusic-kurulum.log
 readonly ANSWERS_FILE=/root/.hovamusic-kurulum
@@ -271,8 +276,12 @@ gather_answers() {
     local repo_default branch_default
     repo_default=$(answer_get REPO)
     branch_default=$(answer_get BRANCH)
-    ask REPO 'GitHub deposu (SSH adresi)' "${repo_default:-$REPO_DEFAULT}" '^git@github\.com:[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+\.git$' \
-        'git@github.com:hesap/depo.git biçiminde yaz.'
+    ask REPO 'GitHub deposu (hesap/depo)' "${repo_default:-$REPO_DEFAULT}" \
+        '^(https://github\.com/|git@github\.com:)?[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(\.git)?/?$' 'hesap/depo biçiminde yaz (ör. 20260501001-cyber/hovamusic).'
+    REPO=${REPO#https://github.com/}
+    REPO=${REPO#git@github.com:}
+    REPO=${REPO%/}
+    REPO=${REPO%.git}
     ask BRANCH 'Dal' "${branch_default:-$BRANCH_DEFAULT}" '^[A-Za-z0-9._/-]+$' 'Geçersiz dal adı.'
 
     local default_ips
@@ -467,9 +476,25 @@ github_ready() {
     [[ $out == *'successfully authenticated'* ]]
 }
 
+# Depo herkese açıksa kod HTTPS ile anahtarsız indirilir.
+repo_is_public() {
+    sudo -u "$APP_USER" -H env GIT_TERMINAL_PROMPT=0 GIT_ASKPASS=/bin/false \
+        git -c credential.helper= ls-remote --quiet "https://github.com/$REPO.git" HEAD >/dev/null 2>&1
+}
+
 setup_github_access() {
     step 'GitHub erişimi'
     local key=$APP_HOME/.ssh/id_ed25519 known=$APP_HOME/.ssh/known_hosts scanned fingerprint
+
+    if repo_is_public; then
+        REPO_URL="https://github.com/$REPO.git"
+        ok 'Depo herkese açık; kod anahtar gerekmeden indirilecek'
+        return
+    fi
+
+    # Depo özel: sunucuya yalnızca bu depoyu okuyabilen bir deploy anahtarı.
+    REPO_URL="git@github.com:$REPO.git"
+    info 'Depo özel (ya da erişilemiyor); sunucu için bir GitHub deploy anahtarı gerekiyor.'
 
     if [[ ! -f $key ]]; then
         sudo -u "$APP_USER" -H ssh-keygen -q -t ed25519 -N '' -C "hovamusic@$(hostname)" -f "$key"
@@ -491,12 +516,12 @@ setup_github_access() {
     while ! github_ready; do
         printf '\n'
         warn 'Sunucunun GitHub deposunu okuyabilmesi için aşağıdaki anahtarı depoya ekle:'
-        info "GitHub > ${REPO#git@github.com:} > Settings > Deploy keys > Add deploy key"
+        info "GitHub > $REPO > Settings > Deploy keys > Add deploy key"
         info 'Başlık: hovamusic-sunucu   "Allow write access" işaretleme.'
         printf '\n%s%s%s\n\n' "$C_DIM" "$(cat "$key.pub")" "$C_OFF"
         read -r -p '  Ekledikten sonra Enter: ' _ </dev/tty || true
     done
-    ok 'GitHub deposuna erişim var'
+    ok 'GitHub deposuna anahtarla erişim var'
 }
 
 fetch_code() {
@@ -505,6 +530,8 @@ fetch_code() {
         if [[ -n $(as_app git status --porcelain --untracked-files=no) ]]; then
             warn 'Sunucudaki kodda elle yapılmış değişiklikler var; güncelleme atlandı.'
         else
+            # Depo açıktan özele (ya da tersi) geçtiyse adres de değişir.
+            as_app git remote set-url origin "$REPO_URL"
             as_app git fetch --quiet origin "$BRANCH"
             as_app git checkout --quiet "$BRANCH"
             as_app git merge --quiet --ff-only "origin/$BRANCH"
@@ -514,7 +541,7 @@ fetch_code() {
         if [[ -n $(ls -A "$APP_DIR") ]]; then
             die "$APP_DIR boş değil ve bir git deposu değil. İçeriğini taşıyıp betiği yeniden çalıştır."
         fi
-        sudo -u "$APP_USER" -H git clone --quiet --branch "$BRANCH" "$REPO" "$APP_DIR"
+        sudo -u "$APP_USER" -H git clone --quiet --branch "$BRANCH" "$REPO_URL" "$APP_DIR"
         ok "Kod indirildi: $(as_app git log -1 --format='%h %s')"
     fi
 }

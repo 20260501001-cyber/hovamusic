@@ -126,7 +126,12 @@ step 'Değişiklikler'
 if [[ -n $(as_app git status --porcelain --untracked-files=no) ]]; then
     die "Sunucudaki kodda elle yapılmış değişiklikler var. Önce bunları geri al: sudo -u $APP_USER git -C $APP_DIR status"
 fi
-as_app git fetch --quiet origin "$BRANCH"
+if ! as_app env GIT_TERMINAL_PROMPT=0 git fetch --quiet origin "$BRANCH"; then
+    if [[ $(as_app git remote get-url origin) == https://* ]]; then
+        die "GitHub deposuna erişilemedi. Depo özel yapıldıysa sunucuya anahtar eklemek için kurulumu yeniden çalıştır: sudo bash $APP_DIR/install.sh"
+    fi
+    die 'GitHub deposuna erişilemedi. Deploy anahtarının depoda durduğunu ve internet bağlantısını kontrol et.'
+fi
 NEW=$(as_app git rev-parse "origin/$BRANCH")
 
 if [[ $NEW == "$OLD" ]]; then
