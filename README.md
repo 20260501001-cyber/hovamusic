@@ -115,9 +115,35 @@ Cron'a tek satır yeterlidir (aşağıda).
 
 ## Üretime kurulum (Ubuntu 24.04)
 
-Aşağıdaki adımlar root yetkili bir Ubuntu 24.04 sunucu, `hovamusic.com` alan adı ve `deploy` kullanıcısı varsayar.
+### Otomatik kurulum
 
-### 0. Sunucu hazırlığı
+`install.sh` boş bir Ubuntu 24.04 sunucuya her şeyi kurar ve sorular sorarak `.env` dosyasını doldurur: paketler, güvenlik duvarı, `deploy` kullanıcısı, MySQL, Redis, GitHub deploy anahtarı, kod, derleme, Nginx, Let's Encrypt SSL, Horizon, cron, ilk yönetici hesabı.
+
+1. Alan adının (ve istersen `www`) DNS A kaydını sunucunun IP'sine yönlendir.
+2. Depo özel olduğu için betiği kendi bilgisayarından sunucuya kopyala:
+
+   ```sh
+   scp install.sh root@SUNUCU_IP:/root/
+   ```
+
+3. Sunucuda çalıştır ve soruları yanıtla:
+
+   ```sh
+   ssh root@SUNUCU_IP
+   bash /root/install.sh
+   ```
+
+   Betik bir GitHub deploy anahtarı üretir, ekrana yazar ve depoya ekleyene kadar bekler (GitHub > Settings > Deploy keys; yazma izni verme).
+
+Betik tekrar çalıştırılabilir: mevcut şifreler ve `APP_KEY` korunur. DNS geç yayıldığı için SSL alınamadıysa ya da sonradan bir servis anahtarı eklediysen yeniden çalıştırman yeterli. Çıktı `/var/log/hovamusic-kurulum.log` dosyasına, kurulum özeti (adresler, admin yolu, yapılacaklar) `/root/hovamusic-kurulum.txt` dosyasına yazılır.
+
+Güncelleme için: `sudo bash /var/www/hovamusic/update.sh` (ayrıntılar aşağıda).
+
+### Elle kurulum
+
+Aşağıdaki adımlar betiğin yaptıklarının elle yapılışıdır; root yetkili bir Ubuntu 24.04 sunucu, `hovamusic.com` alan adı ve `deploy` kullanıcısı varsayar.
+
+#### 0. Sunucu hazırlığı
 
 Alan adının DNS'inde `hovamusic.com` ve `www` için sunucunun IP'sine A kaydı aç. Sonra root olarak:
 
@@ -136,7 +162,7 @@ cat ~/.ssh/id_ed25519.pub   # GitHub > depo > Settings > Deploy keys > Add (yazm
 ssh -T git@github.com       # bağlantıyı doğrula
 ```
 
-### 1. Paketler
+#### 1. Paketler
 
 ```sh
 sudo add-apt-repository ppa:ondrej/php -y
@@ -148,7 +174,7 @@ curl -sS https://getcomposer.org/installer | php && sudo mv composer.phar /usr/l
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - && sudo apt install -y nodejs
 ```
 
-### 2. Veritabanı ve Redis
+#### 2. Veritabanı ve Redis
 
 ```sh
 sudo mysql_secure_installation
@@ -165,7 +191,7 @@ sudo mysql -e "SET PERSIST log_bin_trust_function_creators = 1;"
 
 Redis için `/etc/redis/redis.conf` içinde `bind 127.0.0.1` ve bir `requirepass` tanımla; şifreyi `REDIS_PASSWORD` olarak yaz.
 
-### 3. Uygulama
+#### 3. Uygulama
 
 ```sh
 sudo mkdir -p /var/www/hovamusic /var/hovamusic/private /var/hovamusic/backups
@@ -189,7 +215,7 @@ sudo chown -R deploy:www-data storage bootstrap/cache
 sudo chmod -R ug+rwX storage bootstrap/cache
 ```
 
-### 4. PHP-FPM
+#### 4. PHP-FPM
 
 `/etc/php/8.4/fpm/conf.d/99-hovamusic.ini`:
 
@@ -216,7 +242,7 @@ Ses dosyaları 4 MB'lık parçalarla yüklenir; rapor dosyaları admin panelinde
 sudo systemctl restart php8.4-fpm
 ```
 
-### 5. Nginx
+#### 5. Nginx
 
 `/etc/nginx/sites-available/hovamusic`:
 
@@ -272,7 +298,7 @@ sudo nginx -t && sudo systemctl reload nginx
 
 Güvenlik başlıkları (CSP, HSTS, X-Frame-Options vb.) uygulama tarafından eklenir; Nginx'te tekrar eklenmez. `robots.txt` ve `sitemap.xml` uygulama tarafından üretilir; `public/` altında bu adlarla dosya olmamalı.
 
-### 6. SSL
+#### 6. SSL
 
 ```sh
 sudo certbot --nginx -d hovamusic.com -d www.hovamusic.com --redirect
@@ -280,7 +306,7 @@ sudo certbot --nginx -d hovamusic.com -d www.hovamusic.com --redirect
 
 Sertifika yenileme certbot'un systemd zamanlayıcısıyla otomatik yapılır (`sudo certbot renew --dry-run` ile denenebilir). SSL açıldıktan sonra `.env`: `APP_URL=https://hovamusic.com`, `SESSION_SECURE_COOKIE=true`; ardından `php artisan optimize`. Cloudflare kullanılıyorsa SSL modu "Full (strict)" ve `TRUSTED_PROXIES` Cloudflare aralıkları olmalı.
 
-### 7. Horizon (Supervisor)
+#### 7. Horizon (Supervisor)
 
 `/etc/supervisor/conf.d/hovamusic-horizon.conf`:
 
@@ -288,6 +314,7 @@ Sertifika yenileme certbot'un systemd zamanlayıcısıyla otomatik yapılır (`s
 [program:hovamusic-horizon]
 process_name=%(program_name)s
 command=php /var/www/hovamusic/artisan horizon
+directory=/var/www/hovamusic
 user=deploy
 autostart=true
 autorestart=true
@@ -295,14 +322,15 @@ stopasgroup=true
 killasgroup=true
 stopwaitsecs=3700
 redirect_stderr=true
-stdout_logfile=/var/www/hovamusic/storage/logs/horizon.log
+stdout_logfile=/var/log/hovamusic-horizon.log
+stdout_logfile_maxbytes=0
 ```
 
 ```sh
 sudo supervisorctl reread && sudo supervisorctl update && sudo supervisorctl start hovamusic-horizon
 ```
 
-### 8. Cron
+#### 8. Cron
 
 `crontab -e -u deploy`:
 
@@ -310,14 +338,14 @@ sudo supervisorctl reread && sudo supervisorctl update && sudo supervisorctl sta
 * * * * * cd /var/www/hovamusic && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-### 9. Dış servisler
+#### 9. Dış servisler
 
 - **Polar.sh:** Ürünleri oluştur, ürün kimliklerini admin panelinde Satış > Planlar'a gir. Webhook adresi `https://hovamusic.com/webhooks/polar`; olaylar: `subscription.*`, `order.*`, `checkout.updated`. Gizli anahtarı `POLAR_WEBHOOK_SECRET`'a yaz.
 - **Resend:** Alan adını doğrula (SPF, DKIM), `RESEND_API_KEY`.
 - **Turnstile:** Site ve gizli anahtar.
 - **Google Search Console:** HTML etiketi yöntemindeki kodu admin panelinde Sistem > Ayarlar'a gir; ardından `https://hovamusic.com/sitemap.xml` adresini gönder.
 
-### 10. Yayına almadan önce
+#### 10. Yayına almadan önce
 
 - Admin panelinde İçerik > Yasal metinler: tüm metinlerin bir sürümünü yayımla (KVKK aydınlatma, açık rıza, üyelik sözleşmesi, gizlilik ve çerez politikası, mesafeli satış, ön bilgilendirme).
 - Sitedeki `[ONAY BEKLİYOR: ...]` işaretli cümleleri (`lang/tr/site.php`, SSS) gerçek bilgilerle değiştir.
@@ -326,6 +354,15 @@ sudo supervisorctl reread && sudo supervisorctl update && sudo supervisorctl sta
 - Finans > Kurlar: ilk raporun dönemleri için kur gir.
 
 ## Güncelleme (deploy)
+
+```sh
+sudo bash /var/www/hovamusic/update.sh            # önce yedek alır
+sudo bash /var/www/hovamusic/update.sh --yedeksiz
+```
+
+Betik siteyi bakım moduna alır, yedekler, kodu çeker, bağımlılıkları kurar, ön yüzü derler, migrate eder, önbelleği yeniler, Horizon'u ve PHP-FPM'i yeniden başlatır. Kod ya da derleme hata verirse önceki sürüme döner; migrate hata verirse site bakımda kalır, sorunu giderip betiği yeniden çalıştırmak yeterlidir. Çıktı `/var/log/hovamusic-guncelleme.log` dosyasındadır.
+
+Elle güncelleme:
 
 ```sh
 cd /var/www/hovamusic
