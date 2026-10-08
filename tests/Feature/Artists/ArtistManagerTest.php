@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Artists\AppleMusicCatalog;
 use App\Livewire\Artists\ArtistManager;
 use App\Models\Artist;
 use App\Models\Release;
@@ -18,14 +19,17 @@ it('shows the artists page with an empty state', function () {
         ->assertSee('Henüz sanatçı profilin yok');
 });
 
-it('finds an artist on Spotify by name and saves the profile', function () {
+it('searches Spotify and Apple Music with the typed name and saves the chosen profiles', function () {
     Livewire::test(ArtistManager::class)
         ->call('create')
-        ->set('spotifyQuery', 'deniz')
-        ->assertCount('results', 2)
+        ->set('name', 'deniz')
+        ->assertCount('spotifyResults', 2)
+        ->assertCount('appleResults', 1)
         ->call('selectSpotify', '4tZwfgrHOc3mvqYlEYSvVi')
         ->assertSet('name', 'Deniz Yılmaz')
-        ->set('createNewApple', true)
+        ->assertCount('spotifyResults', 0)
+        ->assertSet('appleResults.0.id', '1234567890')
+        ->call('selectApple', '1234567890')
         ->call('save')
         ->assertHasNoErrors()
         ->assertSet('editing', null);
@@ -35,27 +39,56 @@ it('finds an artist on Spotify by name and saves the profile', function () {
         ->and($artist->spotify_artist_id)->toBe('4tZwfgrHOc3mvqYlEYSvVi')
         ->and($artist->spotify_image_url)->toBe('https://i.scdn.co/image/deniz')
         ->and($artist->create_new_spotify)->toBeFalse()
-        ->and($artist->apple_music_id)->toBeNull()
-        ->and($artist->create_new_apple)->toBeTrue();
+        ->and($artist->apple_music_id)->toBe('1234567890')
+        ->and($artist->create_new_apple)->toBeFalse();
 });
 
-it('reads and verifies a pasted Spotify link', function () {
+it('does not ask for the name twice and stops searching once a profile is chosen', function () {
+    $component = Livewire::test(ArtistManager::class)
+        ->call('create')
+        ->set('name', 'Mavi')
+        ->call('selectSpotify', '1Xyo4u8uXC1ZmMpatF05PJ')
+        ->call('selectApple', '1098765432')
+        ->set('name', 'Mavi Gece (Canlı)')
+        ->assertCount('spotifyResults', 0)
+        ->assertCount('appleResults', 0)
+        ->assertSet('spotify.id', '1Xyo4u8uXC1ZmMpatF05PJ');
+
+    $component->call('clearSpotify')->set('name', 'deniz')->assertCount('spotifyResults', 2);
+});
+
+it('offers a link field only when the profile is not listed', function () {
     Livewire::test(ArtistManager::class)
         ->call('create')
-        ->set('spotifyQuery', 'https://open.spotify.com/intl-tr/artist/1Xyo4u8uXC1ZmMpatF05PJ?si=x')
+        ->set('name', 'Hiç Bilinmeyen')
+        ->assertCount('spotifyResults', 0)
+        ->assertSet('spotifyMessage', '"Hiç Bilinmeyen" için Spotify\'da sanatçı bulunamadı. Profilin varsa linkini ekle.')
+        ->assertSee('Listede yok mu? Link ekle')
+        ->call('spotifyLinkMode', true)
+        ->assertSee('Spotify profil linki')
+        ->set('spotifyLink', 'https://open.spotify.com/intl-tr/artist/1Xyo4u8uXC1ZmMpatF05PJ?si=x')
         ->assertSet('spotify.id', '1Xyo4u8uXC1ZmMpatF05PJ')
-        ->assertSet('name', 'Mavi Gece')
-        ->set('spotifyQuery', 'https://open.spotify.com/album/1Xyo4u8uXC1ZmMpatF05PJ')
-        ->assertSet('searchMessage', 'Link bir Spotify sanatçı profili değil; open.spotify.com/artist/… biçiminde olmalı.')
-        ->set('spotifyQuery', 'https://open.spotify.com/artist/0000000000000000000000')
-        ->assertSet('searchMessage', 'Bu linkteki sanatçı Spotify\'da bulunamadı.');
+        ->assertSet('spotifyByLink', false)
+        ->assertSet('name', 'Mavi Gece');
 });
 
-it('accepts an Apple Music link or id', function () {
+it('explains a wrong or unknown Spotify link', function () {
+    Livewire::test(ArtistManager::class)
+        ->call('create')
+        ->call('spotifyLinkMode', true)
+        ->set('spotifyLink', 'https://open.spotify.com/album/1Xyo4u8uXC1ZmMpatF05PJ')
+        ->assertSet('spotifyMessage', 'Link bir Spotify sanatçı profili değil; open.spotify.com/artist/… biçiminde olmalı.')
+        ->set('spotifyLink', 'https://open.spotify.com/artist/0000000000000000000000')
+        ->assertSet('spotifyMessage', 'Bu linkteki sanatçı Spotify\'da bulunamadı.')
+        ->assertSet('spotify', null);
+});
+
+it('accepts an Apple Music link or id when the profile is not listed', function () {
     Livewire::test(ArtistManager::class)
         ->call('create')
         ->set('name', 'Yeni Sanatçı')
         ->set('createNewSpotify', true)
+        ->call('appleLinkMode', true)
         ->set('appleInput', 'https://music.apple.com/tr/artist/yeni-sanatci/1234567890')
         ->call('save')
         ->assertHasNoErrors();
@@ -67,10 +100,21 @@ it('accepts an Apple Music link or id', function () {
         ->and($artist->create_new_spotify)->toBeTrue();
 });
 
+it('keeps working when Apple Music search is unavailable', function () {
+    app(AppleMusicCatalog::class)->unavailable = true;
+
+    Livewire::test(ArtistManager::class)
+        ->call('create')
+        ->set('name', 'Deniz')
+        ->assertCount('spotifyResults', 2)
+        ->assertSet('appleMessage', __('artist.apple_unavailable'));
+});
+
 it('asks for a store profile or the new profile option', function () {
     Livewire::test(ArtistManager::class)
         ->call('create')
         ->set('name', 'Deniz')
+        ->call('appleLinkMode', true)
         ->set('appleInput', 'apple-degil')
         ->call('save')
         ->assertHasErrors(['spotify', 'apple']);
@@ -83,7 +127,8 @@ it('does not add the same Spotify profile twice', function () {
 
     Livewire::test(ArtistManager::class)
         ->call('create')
-        ->set('spotifyQuery', 'https://open.spotify.com/artist/4tZwfgrHOc3mvqYlEYSvVi')
+        ->call('spotifyLinkMode', true)
+        ->set('spotifyLink', 'https://open.spotify.com/artist/4tZwfgrHOc3mvqYlEYSvVi')
         ->set('createNewApple', true)
         ->call('save')
         ->assertHasErrors(['spotify']);

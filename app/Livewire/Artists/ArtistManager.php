@@ -3,27 +3,21 @@
 namespace App\Livewire\Artists;
 
 use App\Domain\Artists\AppleMusicLinkParser;
+use App\Domain\Artists\ArtistFinder;
 use App\Domain\Plans\GateResult;
 use App\Domain\Plans\PlanGate;
-use App\Domain\Spotify\SpotifyArtist;
-use App\Domain\Spotify\SpotifyCatalog;
-use App\Domain\Spotify\SpotifyLinkParser;
-use App\Domain\Spotify\SpotifyUnavailable;
 use App\Models\Artist;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
- * Sanatçı profilleri. Spotify profili adla aranıp seçilir ya da linki yapıştırılıp
- * doğrulanır; Apple Music için sanatçı ID'si ya da linki girilir. Mağazada profili
+ * Sanatçı profilleri. Ad yazıldıkça Spotify ve Apple Music'te aranır; kullanıcı
+ * listeden profili seçer. Profil listede yoksa link eklenir; mağazada profili
  * olmayan sanatçı için "yeni profil oluşturulsun" seçilir.
  */
 class ArtistManager extends Component
 {
-    private const SEARCHES_PER_MINUTE = 30;
-
     /**
      * 'new' ya da düzenlenen profilin ULID'si.
      */
@@ -31,8 +25,6 @@ class ArtistManager extends Component
     public ?string $editing = null;
 
     public string $name = '';
-
-    public string $spotifyQuery = '';
 
     /**
      * Sunucuda doğrulanmış Spotify profili; istemci değiştiremez.
@@ -44,18 +36,43 @@ class ArtistManager extends Component
 
     public bool $createNewSpotify = false;
 
-    public string $appleInput = '';
+    #[Locked]
+    public bool $spotifyByLink = false;
 
-    public bool $createNewApple = false;
+    public string $spotifyLink = '';
 
     /**
      * @var list<array{id: string, name: string, url: string, image_url: string|null}>
      */
     #[Locked]
-    public array $results = [];
+    public array $spotifyResults = [];
 
     #[Locked]
-    public string $searchMessage = '';
+    public string $spotifyMessage = '';
+
+    /**
+     * Listeden seçilen Apple Music profili.
+     *
+     * @var array{id: string, name: string, url: string, image_url: null, genre?: string|null}|null
+     */
+    #[Locked]
+    public ?array $apple = null;
+
+    public bool $createNewApple = false;
+
+    #[Locked]
+    public bool $appleByLink = false;
+
+    public string $appleInput = '';
+
+    /**
+     * @var list<array{id: string, name: string, url: string, image_url: null, genre: string|null}>
+     */
+    #[Locked]
+    public array $appleResults = [];
+
+    #[Locked]
+    public string $appleMessage = '';
 
     #[Locked]
     public string $notice = '';
@@ -92,7 +109,12 @@ class ArtistManager extends Component
             'image_url' => $artist->spotify_image_url,
         ] : null;
         $this->createNewSpotify = $artist->create_new_spotify;
-        $this->appleInput = (string) $artist->apple_music_id;
+        $this->apple = $artist->apple_music_id ? [
+            'id' => $artist->apple_music_id,
+            'name' => $artist->name,
+            'url' => 'https://music.apple.com/artist/'.$artist->apple_music_id,
+            'image_url' => null,
+        ] : null;
         $this->createNewApple = $artist->create_new_apple;
     }
 
@@ -101,79 +123,108 @@ class ArtistManager extends Component
         $this->resetForm();
     }
 
-    public function updatedSpotifyQuery(): void
+    public function updatedName(): void
     {
-        $catalog = app(SpotifyCatalog::class);
-        $this->results = [];
-        $this->searchMessage = '';
-        $query = trim($this->spotifyQuery);
-
-        if (mb_strlen($query) < 2) {
-            return;
-        }
-
-        $key = 'spotify-search:'.auth()->id();
-
-        if (RateLimiter::tooManyAttempts($key, self::SEARCHES_PER_MINUTE)) {
-            $this->searchMessage = __('artist.spotify_throttled');
-
-            return;
-        }
-
-        RateLimiter::hit($key, 60);
-
-        try {
-            if (SpotifyLinkParser::looksLikeLink($query)) {
-                $this->lookupLink($catalog, $query);
-
-                return;
-            }
-
-            $this->results = array_map(fn (SpotifyArtist $artist): array => $artist->toArray(), $catalog->searchArtists($query));
-
-            if ($this->results === []) {
-                $this->searchMessage = __('artist.spotify_no_results', ['query' => $query]);
-            }
-        } catch (SpotifyUnavailable) {
-            $this->searchMessage = __('artist.spotify_unavailable');
-        }
+        $this->searchSpotify();
+        $this->searchApple();
     }
 
     public function selectSpotify(string $id): void
     {
-        $match = collect($this->results)->firstWhere('id', $id);
+        $match = collect($this->spotifyResults)->firstWhere('id', $id);
 
-        if ($match === null) {
-            return;
+        if ($match !== null) {
+            $this->useSpotify($match);
         }
-
-        $this->useSpotify($match);
     }
 
     public function clearSpotify(): void
     {
         $this->spotify = null;
+        $this->searchSpotify();
+    }
+
+    public function spotifyLinkMode(bool $on = true): void
+    {
+        $this->spotifyByLink = $on;
+        $this->spotifyLink = '';
+        $this->spotifyResults = [];
+        $this->spotifyMessage = '';
+
+        if (! $on) {
+            $this->searchSpotify();
+        }
+    }
+
+    public function updatedSpotifyLink(): void
+    {
+        $found = app(ArtistFinder::class)->spotifyLink($this->spotifyLink, auth()->id());
+        $this->spotifyMessage = $found['message'];
+
+        if ($found['artist'] !== null) {
+            $this->useSpotify($found['artist']);
+        }
     }
 
     public function updatedCreateNewSpotify(): void
     {
-        if ($this->createNewSpotify) {
-            $this->spotify = null;
-            $this->results = [];
-            $this->spotifyQuery = '';
-            $this->searchMessage = '';
+        $this->spotify = null;
+        $this->spotifyByLink = false;
+        $this->spotifyLink = '';
+        $this->spotifyResults = [];
+        $this->spotifyMessage = '';
+        $this->resetErrorBag('spotify');
+
+        if (! $this->createNewSpotify) {
+            $this->searchSpotify();
+        }
+    }
+
+    public function selectApple(string $id): void
+    {
+        $match = collect($this->appleResults)->firstWhere('id', $id);
+
+        if ($match === null) {
+            return;
         }
 
-        $this->resetErrorBag('spotify');
+        $this->apple = $match;
+        $this->createNewApple = false;
+        $this->appleResults = [];
+        $this->appleMessage = '';
+        $this->resetErrorBag('apple');
+    }
+
+    public function clearApple(): void
+    {
+        $this->apple = null;
+        $this->searchApple();
+    }
+
+    public function appleLinkMode(bool $on = true): void
+    {
+        $this->appleByLink = $on;
+        $this->appleInput = '';
+        $this->appleResults = [];
+        $this->appleMessage = '';
+
+        if (! $on) {
+            $this->searchApple();
+        }
     }
 
     public function updatedCreateNewApple(): void
     {
-        if ($this->createNewApple) {
-            $this->appleInput = '';
-        }
-
+        $this->apple = null;
+        $this->appleByLink = false;
+        $this->appleInput = '';
+        $this->appleResults = [];
+        $this->appleMessage = '';
         $this->resetErrorBag('apple');
+
+        if (! $this->createNewApple) {
+            $this->searchApple();
+        }
     }
 
     public function save(): void
@@ -198,7 +249,7 @@ class ArtistManager extends Component
             ['name.required' => __('artist.name_required'), 'name.max' => __('artist.name_too_long')],
         );
 
-        $appleId = AppleMusicLinkParser::artistId($this->appleInput);
+        $appleId = $this->apple['id'] ?? ($this->appleByLink ? AppleMusicLinkParser::artistId($this->appleInput) : null);
         $errors = [];
 
         if ($this->spotify === null && ! $this->createNewSpotify) {
@@ -216,7 +267,7 @@ class ArtistManager extends Component
             }
         }
 
-        if (trim($this->appleInput) !== '' && $appleId === null) {
+        if ($this->appleByLink && trim($this->appleInput) !== '' && $appleId === null) {
             $errors['apple'] = __('artist.apple_invalid');
         } elseif ($appleId === null && ! $this->createNewApple) {
             $errors['apple'] = __('artist.apple_required');
@@ -271,41 +322,47 @@ class ArtistManager extends Component
         $this->notice = __('artist.deleted');
     }
 
-    private function lookupLink(SpotifyCatalog $catalog, string $query): void
+    private function searchSpotify(): void
     {
-        $id = SpotifyLinkParser::artistId($query);
-
-        if ($id === null) {
-            $this->searchMessage = __('artist.spotify_link_invalid');
-
+        if ($this->editing === null || $this->spotify !== null || $this->createNewSpotify || $this->spotifyByLink) {
             return;
         }
 
-        $artist = $catalog->findArtist($id);
+        $found = app(ArtistFinder::class)->spotify($this->name, auth()->id());
+        $this->spotifyResults = $found['results'];
+        $this->spotifyMessage = $found['message'];
+    }
 
-        if ($artist === null) {
-            $this->searchMessage = __('artist.spotify_not_found');
-
+    private function searchApple(): void
+    {
+        if ($this->editing === null || $this->apple !== null || $this->createNewApple || $this->appleByLink) {
             return;
         }
 
-        $this->useSpotify($artist->toArray());
+        $found = app(ArtistFinder::class)->apple($this->name, auth()->id());
+        $this->appleResults = $found['results'];
+        $this->appleMessage = $found['message'];
     }
 
     /**
+     * Profil seçilince ad, mağazadaki yazımla aynı olur; Apple Music araması da bu adla
+     * yenilenir.
+     *
      * @param  array{id: string, name: string, url: string, image_url: string|null}  $artist
      */
     private function useSpotify(array $artist): void
     {
         $this->spotify = $artist;
         $this->createNewSpotify = false;
-        $this->results = [];
-        $this->spotifyQuery = '';
-        $this->searchMessage = '';
+        $this->spotifyByLink = false;
+        $this->spotifyLink = '';
+        $this->spotifyResults = [];
+        $this->spotifyMessage = '';
         $this->resetErrorBag('spotify');
 
-        if (trim($this->name) === '') {
+        if (trim($this->name) !== $artist['name']) {
             $this->name = $artist['name'];
+            $this->searchApple();
         }
     }
 
@@ -316,7 +373,10 @@ class ArtistManager extends Component
 
     private function resetForm(): void
     {
-        $this->reset(['editing', 'name', 'spotifyQuery', 'spotify', 'createNewSpotify', 'appleInput', 'createNewApple', 'results', 'searchMessage', 'notice', 'listError']);
+        $this->reset([
+            'editing', 'name', 'spotify', 'createNewSpotify', 'spotifyByLink', 'spotifyLink', 'spotifyResults', 'spotifyMessage',
+            'apple', 'createNewApple', 'appleByLink', 'appleInput', 'appleResults', 'appleMessage', 'notice', 'listError',
+        ]);
         $this->resetErrorBag();
     }
 

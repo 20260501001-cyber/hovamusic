@@ -57,7 +57,7 @@
                                     <option value="{{ $profile->ulid }}">{{ $profile->name }}</option>
                                 @endforeach
                             </select>
-                            <x-ui.button size="s" icon="plus" wire:click="addPrimaryArtist">{{ __('release.info.add_primary') }}</x-ui.button>
+                            <x-ui.button icon="plus" wire:click="addPrimaryArtist">{{ __('release.info.add_primary') }}</x-ui.button>
                         </div>
                     @endif
                     <p class="hm-field__help">{{ __('release.info.primary_artists_help') }}</p>

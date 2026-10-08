@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Domain\Artists\AppleMusicCatalog;
+use App\Domain\Artists\FakeAppleMusicCatalog;
+use App\Domain\Artists\ITunesSearchCatalog;
 use App\Domain\Billing\PolarClient;
 use App\Domain\Media\AudioProbe;
 use App\Domain\Media\FfprobeAudioProbe;
@@ -46,6 +49,10 @@ class AppServiceProvider extends ServiceProvider
                 ? new SpotifyWebApiCatalog($id, $secret)
                 : new UnavailableSpotifyCatalog;
         });
+
+        $this->app->singleton(AppleMusicCatalog::class, fn (): AppleMusicCatalog => $this->app->runningUnitTests()
+            ? new FakeAppleMusicCatalog
+            : new ITunesSearchCatalog);
 
         $this->app->singleton(PolarClient::class, fn (): PolarClient => PolarClient::fromConfig());
 

@@ -117,6 +117,25 @@ Cron'a tek satır yeterlidir (aşağıda).
 
 Aşağıdaki adımlar root yetkili bir Ubuntu 24.04 sunucu, `hovamusic.com` alan adı ve `deploy` kullanıcısı varsayar.
 
+### 0. Sunucu hazırlığı
+
+Alan adının DNS'inde `hovamusic.com` ve `www` için sunucunun IP'sine A kaydı aç. Sonra root olarak:
+
+```sh
+timedatectl set-timezone Europe/Istanbul
+adduser deploy && usermod -aG sudo deploy
+mkdir -p /home/deploy/.ssh && cp ~/.ssh/authorized_keys /home/deploy/.ssh/ && chown -R deploy:deploy /home/deploy/.ssh
+ufw allow OpenSSH && ufw allow 'Nginx Full' && ufw enable
+```
+
+Depo özel olduğu için sunucuya salt okunur bir GitHub deploy anahtarı ekle (`deploy` kullanıcısıyla):
+
+```sh
+ssh-keygen -t ed25519 -C "hovamusic-sunucu" -f ~/.ssh/id_ed25519 -N ""
+cat ~/.ssh/id_ed25519.pub   # GitHub > depo > Settings > Deploy keys > Add (yazma izni verme)
+ssh -T git@github.com       # bağlantıyı doğrula
+```
+
 ### 1. Paketler
 
 ```sh
@@ -155,6 +174,8 @@ cp .env.example .env   # alanları yukarıdaki tabloya göre doldur
 php artisan key:generate
 php artisan migrate --force
 php artisan db:seed --force          # roller, mağaza listesi, başlangıç SSS
+# Tür listesi admin panelinden girilir; örnek listeyle başlamak için:
+# php artisan db:seed --class=GenreSeeder --force
 php artisan storage:link
 php artisan hova:admin-create
 php artisan optimize

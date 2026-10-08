@@ -139,6 +139,7 @@ return [
         'add_featuring_profile' => 'Profilden ekle',
         'add_featuring_guest' => 'Konuk sanatçı ekle',
         'guest_name' => 'Konuk sanatçının adı',
+        'guest_help' => 'Adı yazdıkça Spotify ve Apple Music\'te aranır. Profili yoksa boş bırak; mağazada yeni profil açılır.',
         'guest_spotify' => 'Spotify linki ya da ID',
         'guest_apple' => 'Apple Music linki ya da ID',
         'no_artists_title' => 'Önce bir sanatçı profili ekle',

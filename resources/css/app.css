@@ -31,10 +31,10 @@
     --color-info: var(--info);
     --color-info-soft: var(--info-soft);
 
-    --radius-xs: 2px;
-    --radius-sm: 4px;
-    --radius-md: 6px;
-    --radius-lg: 10px;
+    --radius-xs: 4px;
+    --radius-sm: var(--radius-s);
+    --radius-md: var(--radius-m);
+    --radius-lg: var(--radius-l);
 }
 
 @theme {

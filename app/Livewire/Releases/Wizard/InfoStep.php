@@ -7,6 +7,7 @@ use App\Domain\Releases\ReleaseValidator;
 use App\Enums\AccountType;
 use App\Enums\ArtistRole;
 use App\Enums\ReleaseType;
+use App\Livewire\Concerns\LooksUpGuestArtists;
 use App\Models\Genre;
 use App\Models\Release;
 use App\Support\Format;
@@ -18,6 +19,8 @@ use Illuminate\Support\Str;
 
 class InfoStep extends WizardStep
 {
+    use LooksUpGuestArtists;
+
     public const STEP = ReleaseValidator::STEP_INFO;
 
     /**
@@ -110,6 +113,10 @@ class InfoStep extends WizardStep
     {
         $root = Str::before($property, '.');
 
+        if (($guest = $this->guestNameIndex($property)) !== null) {
+            $this->lookupGuest($guest);
+        }
+
         if (! isset(self::FIELDS[$root])) {
             return;
         }
@@ -167,10 +174,22 @@ class InfoStep extends WizardStep
         $this->featuring[] = ['kind' => $kind, 'artist' => null, 'name' => '', 'spotify' => '', 'apple' => ''];
     }
 
+    protected function guestEntries(): array
+    {
+        return $this->featuring;
+    }
+
+    protected function storeGuestEntries(array $entries): void
+    {
+        $this->featuring = $entries;
+        $this->updated('featuring');
+    }
+
     public function removeFeaturing(int $index): void
     {
         unset($this->featuring[$index]);
         $this->featuring = array_values($this->featuring);
+        $this->guestLookup = [];
         $this->clearInputError('featuring');
         $this->updated('featuring');
     }

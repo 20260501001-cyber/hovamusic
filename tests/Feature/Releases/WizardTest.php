@@ -94,6 +94,53 @@ describe('info step', function () {
             ->and($this->user->artists()->count())->toBe(2);
     });
 
+    it('finds a guest artist on Spotify and Apple Music by name', function () {
+        $release = Release::factory()->for($this->user)->create();
+
+        $component = Livewire::test(InfoStep::class, ['release' => $release])
+            ->call('addFeaturing', 'guest')
+            ->set('featuring.0.name', 'deniz')
+            ->assertCount('guestLookup.0.spotify', 2)
+            ->assertCount('guestLookup.0.apple', 1)
+            ->call('selectGuestProfile', 0, 'spotify', '4tZwfgrHOc3mvqYlEYSvVi')
+            ->assertSet('featuring.0.name', 'Deniz Yılmaz')
+            ->assertCount('guestLookup.0.spotify', 0)
+            ->call('selectGuestProfile', 0, 'apple', '1234567890')
+            ->assertHasNoErrors();
+
+        $guest = $release->artists()->sole();
+
+        expect($guest->name)->toBe('Deniz Yılmaz')
+            ->and($guest->spotify_artist_id)->toBe('4tZwfgrHOc3mvqYlEYSvVi')
+            ->and($guest->apple_music_id)->toBe('1234567890')
+            ->and($guest->artist_id)->toBeNull();
+
+        $component->call('guestLinkMode', 0, 'apple', true)
+            ->assertSee('Apple Music profil linki ya da sanatçı ID\'si')
+            ->set('featuring.0.apple', '1098765432');
+
+        expect($release->artists()->sole()->apple_music_id)->toBe('1098765432');
+
+        $component->call('clearGuestProfile', 0, 'spotify');
+
+        expect($release->artists()->sole()->spotify_artist_id)->toBeNull();
+    });
+
+    it('searches guests on the track step too', function () {
+        $release = Release::factory()->for($this->user)->create();
+        $track = Track::factory()->for($release)->create();
+
+        Livewire::test(TracksStep::class, ['release' => $release])
+            ->call('edit', $track->ulid)
+            ->call('addFeaturing', 'guest')
+            ->set('form.featuring.0.name', 'mavi')
+            ->assertCount('guestLookup.0.spotify', 1)
+            ->call('selectGuestProfile', 0, 'spotify', '1Xyo4u8uXC1ZmMpatF05PJ')
+            ->assertSet('form.featuring.0.name', 'Mavi Gece');
+
+        expect($track->artists()->sole()->spotify_artist_id)->toBe('1Xyo4u8uXC1ZmMpatF05PJ');
+    });
+
     it('explains an unreadable guest link', function () {
         $release = Release::factory()->for($this->user)->create();
 

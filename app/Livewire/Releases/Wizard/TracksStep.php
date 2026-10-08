@@ -11,6 +11,7 @@ use App\Enums\CreditRole;
 use App\Enums\IsrcSource;
 use App\Enums\MediaStatus;
 use App\Enums\UploadStatus;
+use App\Livewire\Concerns\LooksUpGuestArtists;
 use App\Models\Release;
 use App\Models\Track;
 use App\Models\UploadSession;
@@ -25,6 +26,8 @@ use Livewire\Attributes\Locked;
 
 class TracksStep extends WizardStep
 {
+    use LooksUpGuestArtists;
+
     public const STEP = ReleaseValidator::STEP_TRACKS;
 
     private const MAX_CREDITS = 20;
@@ -70,6 +73,7 @@ class TracksStep extends WizardStep
 
         $this->editing = $track->ulid;
         $this->inputErrors = [];
+        $this->guestLookup = [];
         $this->touched = array_filter($this->touched, fn (string $key): bool => ! str_starts_with($key, 'form.'), ARRAY_FILTER_USE_KEY);
         $this->form = [
             'title' => (string) $track->title,
@@ -92,6 +96,7 @@ class TracksStep extends WizardStep
         $this->editing = null;
         $this->form = [];
         $this->inputErrors = [];
+        $this->guestLookup = [];
     }
 
     public function updatedForm(mixed $value, string $key): void
@@ -102,6 +107,11 @@ class TracksStep extends WizardStep
 
         $root = Str::before($key, '.');
         $this->touch("form.{$root}");
+
+        if (($guest = $this->guestNameIndex($key)) !== null) {
+            $this->lookupGuest($guest);
+        }
+
         $track = $this->track($this->editing);
 
         match ($root) {
@@ -161,6 +171,21 @@ class TracksStep extends WizardStep
         $this->form['featuring'][] = ['kind' => $kind, 'artist' => null, 'name' => '', 'spotify' => '', 'apple' => ''];
     }
 
+    protected function guestEntries(): array
+    {
+        return $this->editing === null ? [] : array_values($this->form['featuring'] ?? []);
+    }
+
+    protected function storeGuestEntries(array $entries): void
+    {
+        if ($this->editing === null) {
+            return;
+        }
+
+        $this->form['featuring'] = $entries;
+        $this->updatedForm(null, 'featuring');
+    }
+
     public function removeFeaturing(int $index): void
     {
         if ($this->editing === null) {
@@ -170,6 +195,7 @@ class TracksStep extends WizardStep
         $entries = $this->form['featuring'] ?? [];
         unset($entries[$index]);
         $this->form['featuring'] = array_values($entries);
+        $this->guestLookup = [];
         $this->updatedForm(null, 'featuring');
     }
 
