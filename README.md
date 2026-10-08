@@ -157,7 +157,13 @@ sudo mysql -e "CREATE USER 'hovamusic'@'localhost' IDENTIFIED BY 'GÜÇLÜ-BİR-
 sudo mysql -e "GRANT ALL PRIVILEGES ON hovamusic.* TO 'hovamusic'@'localhost'; GRANT PROCESS ON *.* TO 'hovamusic'@'localhost'; FLUSH PRIVILEGES;"
 ```
 
-`PROCESS` yetkisi yedekleme sırasında `mysqldump` için gerekir. Redis için `/etc/redis/redis.conf` içinde `bind 127.0.0.1` ve bir `requirepass` tanımla; şifreyi `REDIS_PASSWORD` olarak yaz.
+`PROCESS` yetkisi yedekleme sırasında `mysqldump` için gerekir. Bakiye defterini koruyan tetikleyiciler (trigger) ikili log açıkken SUPER yetkisi olmadan oluşturulamaz; migrate'ten önce bir kez çalıştır:
+
+```sh
+sudo mysql -e "SET PERSIST log_bin_trust_function_creators = 1;"
+```
+
+Redis için `/etc/redis/redis.conf` içinde `bind 127.0.0.1` ve bir `requirepass` tanımla; şifreyi `REDIS_PASSWORD` olarak yaz.
 
 ### 3. Uygulama
 
