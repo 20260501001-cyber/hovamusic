@@ -87,7 +87,7 @@ Testler SQLite bellek veritabanıyla çalışır (`phpunit.xml`). GitHub Actions
 | `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET` | Spotify Web API (sanatçı arama, yayın takibi). |
 | `FFPROBE_PATH` | ffprobe PATH'te değilse tam yolu. |
 | `BACKUP_PATH`, `BACKUP_KEEP_DAILY`, `BACKUP_KEEP_WEEKLY`, `BACKUP_MYSQLDUMP` | Gece yedeğinin dizini ve saklama sayıları (7 günlük, 4 haftalık), mysqldump yolu. |
-| `TRUSTED_PROXIES` | Cloudflare veya yük dengeleyici arkasında güvenilen proxy IP'leri (virgülle) ya da `*`. |
+| `TRUSTED_PROXIES` | Cloudflare veya yük dengeleyici arkasında güvenilen proxy IP'leri (virgülle). Sunucuya doğrudan da erişilebiliyorsa `*` kullanma: istemci IP'si taklit edilebilir, admin IP kısıtı ve hız sınırları aşılır. |
 | `VITE_APP_NAME` | Ön yüz derlemesinde kullanılan ad. |
 
 Admin panelinden değiştirilen ayarlar (en erken yayın tarihi, dosya sınırları, ISRC öneki, tahmini Wise ücreti, Search Console doğrulama kodu, iletişim e-postası) `.env`'de değil veritabanında tutulur: Sistem > Ayarlar ve Finans > Finans ayarları.
@@ -202,6 +202,12 @@ expose_php = Off
 opcache.enable = 1
 opcache.memory_consumption = 256
 opcache.validate_timestamps = 0
+```
+
+PHP-FPM, Horizon ve cron aynı kullanıcıyla (`deploy`) çalışmalı: özel diskteki dosyalar yalnızca sahibine açık (0600) yazılır; web isteğinin yüklediği sesi kuyruktaki analiz işi de okuyabilmeli. Soket `www-data`'ya açık kalır, Nginx bağlanmaya devam eder:
+
+```sh
+sudo sed -i 's/^user = www-data/user = deploy/; s/^group = www-data/group = deploy/' /etc/php/8.4/fpm/pool.d/www.conf
 ```
 
 Ses dosyaları 4 MB'lık parçalarla yüklenir; rapor dosyaları admin panelinden en fazla 50 MB. `opcache.validate_timestamps=0` olduğu için her deploy'da `php-fpm` yeniden yüklenir (aşağıda).

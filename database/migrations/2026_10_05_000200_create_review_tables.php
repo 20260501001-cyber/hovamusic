@@ -64,9 +64,9 @@ return new class extends Migration
             $table->timestamp('handled_at')->nullable();
             $table->timestamps();
             $table->unique(
-    ['release_id', 'spotify_album_id', 'matched_by', 'track_id'],
-    'spotify_match_unique'
-);
+                ['release_id', 'spotify_album_id', 'matched_by', 'track_id'],
+                'spotify_match_unique'
+            );
         });
 
         Schema::table('releases', function (Blueprint $table) {

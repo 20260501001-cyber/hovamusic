@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\ThrottleFormSubmissions;
 use App\Logging\MaskSensitiveData;
+use App\Models\ContactMessage;
 use App\Models\Release;
 use App\Models\User;
 use Illuminate\Log\Logger;
@@ -85,4 +86,15 @@ it('does not reveal another user\'s release by sequential id or ulid', function 
     $this->actingAs($release->user)
         ->get('/panel/yayinlar/'.$release->id)
         ->assertNotFound();
+});
+
+it('reads the client IP through configured proxies only', function () {
+    $send = fn () => $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.5', 'HTTP_X_FORWARDED_FOR' => '203.0.113.9'])
+        ->post(route('contact.store'), ['name' => 'Deniz', 'email' => 'deniz@example.com', 'topic' => 'general', 'message' => 'Merhaba, bir sorum var.']);
+
+    $send();
+    config(['trustedproxy.proxies' => '10.0.0.0/8']);
+    $send();
+
+    expect(ContactMessage::query()->orderBy('id')->pluck('ip_address')->all())->toBe(['10.0.0.5', '203.0.113.9']);
 });

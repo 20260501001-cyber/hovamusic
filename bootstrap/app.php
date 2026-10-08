@@ -28,12 +28,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.ip' => RestrictAdminIp::class,
         ]);
 
-        $proxies = env('TRUSTED_PROXIES');
-
-        if (filled($proxies)) {
-            $middleware->trustProxies(at: $proxies === '*' ? '*' : array_map('trim', explode(',', $proxies)));
-        }
-
         $middleware->redirectGuestsTo(fn () => route('login'));
         $middleware->redirectUsersTo(fn () => route('panel.dashboard'));
     })
