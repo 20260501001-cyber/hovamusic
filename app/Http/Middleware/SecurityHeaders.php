@@ -55,11 +55,16 @@ class SecurityHeaders
         $connect = ["'self'"];
 
         $image = ["'self'", 'data:', 'blob:'];
+        $form = ["'self'"];
 
         if ($this->isApplicationArea($request)) {
             $script[] = "'unsafe-eval'";
             // Spotify sanatçı aramasındaki profil görselleri.
             $image[] = 'https://i.scdn.co';
+            // "Ödemeye geç" ve "Planı yönet" formları Polar'a yönlendirir; tarayıcı
+            // form-action'ı yönlendirmenin hedefine de uygular.
+            $form[] = 'https://polar.sh';
+            $form[] = 'https://*.polar.sh';
         }
 
         if (Vite::isRunningHot()) {
@@ -81,7 +86,7 @@ class SecurityHeaders
             'frame-src' => ['https://challenges.cloudflare.com'],
             'object-src' => ["'none'"],
             'base-uri' => ["'self'"],
-            'form-action' => ["'self'"],
+            'form-action' => $form,
             'frame-ancestors' => ["'none'"],
         ];
 

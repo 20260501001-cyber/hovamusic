@@ -27,6 +27,14 @@ it('allows script evaluation only inside the panel', function () {
     expect($csp)->toContain("'unsafe-eval'");
 });
 
+it('lets panel forms continue to the Polar checkout but keeps the public site same-origin', function () {
+    $panel = $this->actingAs(User::factory()->create())->get('/panel')->headers->get('Content-Security-Policy');
+    $public = $this->get('/')->headers->get('Content-Security-Policy');
+
+    expect($panel)->toContain("form-action 'self' https://polar.sh https://*.polar.sh")
+        ->and($public)->toContain("form-action 'self';");
+});
+
 it('sends HSTS over HTTPS', function () {
     $this->get('https://localhost/')
         ->assertHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
