@@ -17,7 +17,7 @@ jobs:
           extensions: mbstring, intl, pdo_sqlite, pdo_mysql, redis, gd, zip, sodium
           coverage: none
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
